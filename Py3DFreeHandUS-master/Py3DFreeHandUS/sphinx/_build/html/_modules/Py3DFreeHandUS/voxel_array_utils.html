@@ -1,0 +1,806 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Py3DFreeHandUS.voxel_array_utils &mdash; Py3DFreeHandUS 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Py3DFreeHandUS 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Py3DFreeHandUS 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for Py3DFreeHandUS.voxel_array_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: voxel_array_utils</span>
+<span class="sd">   :synopsis: helper module for voxel-array</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">griddata</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span> <span class="k">as</span> <span class="n">nd</span>
+<span class="kn">import</span> <span class="nn">vtk</span>
+<span class="kn">from</span> <span class="nn">vtk.util</span> <span class="kn">import</span> <span class="n">numpy_support</span> <span class="k">as</span> <span class="n">nps</span>
+<span class="kn">import</span> <span class="nn">SimpleITK</span> <span class="kn">as</span> <span class="nn">sitk</span>
+
+
+<div class="viewcode-block" id="VoxelArray3D"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.VoxelArray3D">[docs]</a><span class="k">class</span> <span class="nc">VoxelArray3D</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataType</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">scales</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">,</span><span class="mf">1.</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;Constructor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="n">dataType</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xl</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yl</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zl</span> <span class="o">=</span> <span class="n">dims</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fx</span> <span class="o">=</span> <span class="n">scales</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fy</span> <span class="o">=</span> <span class="n">scales</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fz</span> <span class="o">=</span> <span class="n">scales</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataType</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">getDims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span>
+
+    <span class="k">def</span> <span class="nf">getDataByIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">getDataByEdges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">z1</span><span class="p">):</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNumpyArray3D</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">V</span><span class="p">[</span><span class="n">x0</span><span class="p">:</span><span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">:</span><span class="n">y1</span><span class="p">,</span> <span class="n">z0</span><span class="p">:</span><span class="n">z1</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">getSubVoxelArray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">z1</span><span class="p">):</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDataByEdges</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
+        <span class="n">newV</span> <span class="o">=</span> <span class="n">VoxelArray3D</span><span class="p">(</span><span class="n">dataType</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataType</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fx</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fy</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fz</span><span class="p">))</span>
+        <span class="n">newV</span><span class="o">.</span><span class="n">setAllDataByNumpy3D</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">newV</span>
+        
+    <span class="k">def</span> <span class="nf">setDataByIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+        
+    <span class="k">def</span> <span class="nf">addConstByIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+=</span> <span class="n">c</span>
+        
+    <span class="k">def</span> <span class="nf">setAllDataByNumpy1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">V</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span><span class="o">.</span><span class="n">dtype</span>
+    
+    <span class="k">def</span> <span class="nf">setAllDataByNumpy3D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setAllDataByNumpy1D</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">))</span>
+        
+    <span class="k">def</span> <span class="nf">getNumpyArray1D</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">V</span>
+        
+    <span class="k">def</span> <span class="nf">getNumpyArray3D</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getNumpyArray1D</span><span class="p">(),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xMin</span><span class="p">,</span> <span class="n">xMax</span><span class="p">,</span> <span class="n">yMin</span><span class="p">,</span> <span class="n">yMax</span><span class="p">,</span> <span class="n">zMin</span><span class="p">,</span> <span class="n">zMax</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">xMin</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">xMax</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">yMin</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">yMax</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">zMin</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">zMax</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span> 
+            <span class="n">xa</span><span class="p">,</span> <span class="n">ya</span><span class="p">,</span> <span class="n">za</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">xMin</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">yMin</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">zMin</span><span class="p">))</span>
+            <span class="n">xb</span><span class="p">,</span> <span class="n">yb</span><span class="p">,</span> <span class="n">zb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">xMax</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">yMax</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">zMax</span><span class="p">))</span>
+            <span class="n">xl</span><span class="p">,</span> <span class="n">yl</span><span class="p">,</span> <span class="n">zl</span> <span class="o">=</span> <span class="n">xb</span> <span class="o">-</span> <span class="n">xa</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">yb</span> <span class="o">-</span> <span class="n">ya</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">zb</span> <span class="o">-</span> <span class="n">za</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="n">xa</span><span class="p">,</span> <span class="o">-</span><span class="n">ya</span><span class="p">,</span> <span class="o">-</span><span class="n">za</span>
+            <span class="n">newV</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">xl</span><span class="p">,</span><span class="n">yl</span><span class="p">,</span><span class="n">zl</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataType</span><span class="p">)</span>
+            <span class="n">tempV</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNumpyArray3D</span><span class="p">()</span>
+            <span class="n">newV</span><span class="p">[</span><span class="n">x</span><span class="p">:</span><span class="n">x</span><span class="o">+</span><span class="n">dx</span><span class="p">,</span><span class="n">y</span><span class="p">:</span><span class="n">y</span><span class="o">+</span><span class="n">dy</span><span class="p">,</span><span class="n">z</span><span class="p">:</span><span class="n">z</span><span class="o">+</span><span class="n">dz</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempV</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xl</span> <span class="o">=</span> <span class="n">xl</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">yl</span> <span class="o">=</span> <span class="n">yl</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zl</span> <span class="o">=</span> <span class="n">zl</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setAllDataByNumpy3D</span><span class="p">(</span><span class="n">newV</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">fillGaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contVA</span><span class="p">,</span> <span class="n">internalVA</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;VNN&#39;</span><span class="p">,</span> <span class="n">blocksN</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">blockDir</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">distTh</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxS</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">minPct</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNumpyArray1D</span><span class="p">()</span>
+        <span class="n">usedV</span> <span class="o">=</span> <span class="n">contVA</span><span class="o">.</span><span class="n">getNumpyArray1D</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="n">internalV</span> <span class="o">=</span> <span class="n">internalVA</span><span class="o">.</span><span class="n">getNumpyArray1D</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s1">&#39;Filling empty voxels ({0}), when possible ...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">blockDir</span> <span class="o">==</span> <span class="s1">&#39;X&#39;</span><span class="p">:</span>
+            <span class="n">bxl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xl</span> <span class="o">/</span> <span class="n">blocksN</span><span class="p">)</span>
+            <span class="n">byl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span>
+            <span class="n">bzl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span>
+        <span class="k">elif</span> <span class="n">blockDir</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span>
+            <span class="n">bxl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span>
+            <span class="n">byl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yl</span> <span class="o">/</span> <span class="n">blocksN</span><span class="p">)</span>
+            <span class="n">bzl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span>
+        <span class="k">elif</span> <span class="n">blockDir</span> <span class="o">==</span> <span class="s1">&#39;Z&#39;</span><span class="p">:</span>
+            <span class="n">bxl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span>
+            <span class="n">byl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span>
+            <span class="n">bzl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zl</span> <span class="o">/</span> <span class="n">blocksN</span><span class="p">)</span>
+<span class="c1">#        blockSize = bxl * byl * bzl</span>
+<span class="c1">#        if len(self.getDims()) &gt; 1:</span>
+<span class="c1">#            sliceMethod = &#39;fast&#39;</span>
+<span class="c1">#        else:</span>
+<span class="c1">#            sliceMethod = &#39;slow&#39;</span>
+        <span class="n">sliceMethod</span> <span class="o">=</span> <span class="s1">&#39;slow&#39;</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">blocksN</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s1">&#39;Block {0} ...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Initialize block indices</span>
+            <span class="n">cLims</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+            <span class="k">if</span> <span class="n">blockDir</span> <span class="o">==</span> <span class="s1">&#39;X&#39;</span><span class="p">:</span>
+                <span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">*</span><span class="n">bxl</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([(</span><span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">bxl</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">])]</span>
+                <span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">]</span>
+                <span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">bxl</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">:</span>
+                    <span class="n">bxl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">bxl</span>
+            <span class="k">elif</span> <span class="n">blockDir</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span>
+                <span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">]</span>
+                <span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">*</span><span class="n">byl</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([(</span><span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">byl</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">])]</span>
+                <span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">byl</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">:</span>
+                    <span class="n">byl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">byl</span>
+            <span class="k">elif</span> <span class="n">blockDir</span> <span class="o">==</span> <span class="s1">&#39;Z&#39;</span><span class="p">:</span>
+                <span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">]</span>
+                <span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">]</span>
+                <span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">*</span><span class="n">bzl</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([(</span><span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">bzl</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">])]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">bzl</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">:</span>
+                    <span class="n">bzl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">bzl</span>
+            <span class="k">if</span> <span class="n">sliceMethod</span> <span class="o">==</span> <span class="s1">&#39;slow&#39;</span><span class="p">:</span>
+                <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">zc</span> <span class="o">=</span> <span class="n">getCubeCoords</span><span class="p">(</span><span class="n">cLims</span><span class="p">)</span>
+                <span class="n">ind</span> <span class="o">=</span> <span class="n">xyz2idx</span><span class="p">(</span><span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">zc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">)</span>
+                <span class="n">idxBlock</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getDims</span><span class="p">()),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+                <span class="n">idxBlock</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;VNN&#39;</span><span class="p">:</span>
+                <span class="c1"># Apply VNN</span>
+<span class="c1">#                bzl = np.sum(idxBlock) / (bxl * byl)</span>
+                <span class="k">if</span> <span class="n">sliceMethod</span> <span class="o">==</span> <span class="s1">&#39;slow&#39;</span><span class="p">:</span>
+                    <span class="n">reshV</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">~</span><span class="n">usedV</span> <span class="o">&amp;</span> <span class="n">internalV</span><span class="p">)[</span><span class="n">idxBlock</span><span class="p">],</span> <span class="p">(</span><span class="n">bzl</span><span class="p">,</span><span class="n">byl</span><span class="p">,</span><span class="n">bxl</span><span class="p">))</span>
+                    <span class="n">reshV2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">V</span><span class="p">[</span><span class="n">idxBlock</span><span class="p">],</span> <span class="p">(</span><span class="n">bzl</span><span class="p">,</span><span class="n">byl</span><span class="p">,</span><span class="n">bxl</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">sliceMethod</span> <span class="o">==</span> <span class="s1">&#39;fast&#39;</span><span class="p">:</span>
+                    <span class="n">reshV</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="n">usedV</span> <span class="o">&amp;</span> <span class="n">internalV</span><span class="p">)[</span><span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+                    <span class="n">reshV2</span> <span class="o">=</span> <span class="n">V</span><span class="p">[</span><span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">distTh</span> <span class="o">==</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">idxV</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="n">reshV</span><span class="p">,</span> <span class="n">return_distances</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">return_indices</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">edt</span><span class="p">,</span> <span class="n">idxV</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">distance_transform_edt</span><span class="p">(</span><span class="n">reshV</span><span class="p">,</span> <span class="n">return_distances</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">return_indices</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                    <span class="n">idxTh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">edt</span> <span class="o">&gt;</span> <span class="n">distTh</span><span class="p">)</span>
+                    <span class="n">idxV</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">idxTh</span><span class="p">]</span> <span class="o">=</span> <span class="n">idxTh</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">idxV</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">idxTh</span><span class="p">]</span> <span class="o">=</span> <span class="n">idxTh</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">idxV</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">idxTh</span><span class="p">]</span> <span class="o">=</span> <span class="n">idxTh</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="k">del</span> <span class="n">edt</span><span class="p">,</span> <span class="n">idxTh</span>
+                <span class="k">if</span> <span class="n">sliceMethod</span> <span class="o">==</span> <span class="s1">&#39;slow&#39;</span><span class="p">:</span>
+                    <span class="n">V</span><span class="p">[</span><span class="n">idxBlock</span><span class="p">]</span> <span class="o">=</span> <span class="n">reshV2</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">idxV</span><span class="p">)]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+                    <span class="n">usedV</span><span class="p">[</span><span class="n">idxBlock</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="k">del</span> <span class="n">idxBlock</span>
+                <span class="k">elif</span> <span class="n">sliceMethod</span> <span class="o">==</span> <span class="s1">&#39;fast&#39;</span><span class="p">:</span>
+                    <span class="n">V</span><span class="p">[</span><span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">reshV2</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">idxV</span><span class="p">)]</span>
+                    <span class="n">usedV</span><span class="p">[</span><span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">cLims</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">del</span> <span class="n">reshV</span><span class="p">,</span> <span class="n">reshV2</span><span class="p">,</span> <span class="n">idxV</span>
+                <span class="c1"># Print some info</span>
+                <span class="n">pctInternalEmpty</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">internalV</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">usedV</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">internalV</span><span class="p">)</span>
+                <span class="k">print</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Estimate of pct of internal empty voxels: ({0}</span><span class="si">% i</span><span class="s1">nternal)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pctInternalEmpty</span><span class="p">)</span> 
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;AVG_CUBE&#39;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">S</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxS</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">b</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="c1"># Generate voxel coordinates for the search cube</span>
+                        <span class="n">xCube</span><span class="p">,</span> <span class="n">yCube</span><span class="p">,</span> <span class="n">zCube</span> <span class="o">=</span> <span class="n">getCubeCoords</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+                        <span class="c1"># Remove central voxel of the cube</span>
+                        <span class="n">idxCentral</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">((</span><span class="n">xCube</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">yCube</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">zCube</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+                        <span class="n">xCube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">xCube</span><span class="p">,</span> <span class="n">idxCentral</span><span class="p">)[:,</span> <span class="bp">None</span><span class="p">]</span>
+                        <span class="n">yCube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">yCube</span><span class="p">,</span> <span class="n">idxCentral</span><span class="p">)[:,</span> <span class="bp">None</span><span class="p">]</span>
+                        <span class="n">zCube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">zCube</span><span class="p">,</span> <span class="n">idxCentral</span><span class="p">)[:,</span> <span class="bp">None</span><span class="p">]</span>
+                        <span class="c1"># Calculate distance from each vixel to central voxel</span>
+                        <span class="n">distNeighs</span> <span class="o">=</span> <span class="p">(</span><span class="n">xCube</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">yCube</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">zCube</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                        <span class="n">idxSort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">distNeighs</span><span class="p">)</span>
+                        <span class="n">distNeighs</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">distNeighs</span><span class="p">[</span><span class="n">idxSort</span><span class="p">,:]</span>
+                    <span class="n">idxEmpty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">((</span><span class="o">~</span><span class="n">usedV</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">idxBlock</span> <span class="o">&amp;</span> <span class="n">internalV</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># time bottleneck</span>
+                    <span class="c1"># Get coordinates of empty voxels</span>
+                    <span class="n">xn</span><span class="p">,</span> <span class="n">yn</span><span class="p">,</span> <span class="n">zn</span> <span class="o">=</span> <span class="n">idx2xyz</span><span class="p">(</span><span class="n">idxEmpty</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">)</span>
+                    <span class="n">xn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">xn</span><span class="p">,</span> <span class="p">(</span><span class="n">S</span><span class="o">**</span><span class="mi">3</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="n">yn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">yn</span><span class="p">,</span> <span class="p">(</span><span class="n">S</span><span class="o">**</span><span class="mi">3</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="n">zn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">zn</span><span class="p">,</span> <span class="p">(</span><span class="n">S</span><span class="o">**</span><span class="mi">3</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="n">idxNeighs</span> <span class="o">=</span> <span class="n">xyz2idx</span><span class="p">(</span><span class="n">xn</span><span class="o">+</span><span class="n">xCube</span><span class="p">,</span><span class="n">yn</span><span class="o">+</span><span class="n">yCube</span><span class="p">,</span><span class="n">zn</span><span class="o">+</span><span class="n">zCube</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">)</span>
+                    <span class="c1"># Get values for neigbour voxels, empty or not</span>
+                    <span class="n">neighsV</span> <span class="o">=</span> <span class="n">V</span><span class="p">[</span><span class="n">idxNeighs</span><span class="p">]</span>
+                    <span class="n">neighsUsedV</span> <span class="o">=</span> <span class="n">usedV</span><span class="p">[</span><span class="n">idxNeighs</span><span class="p">]</span>
+                    <span class="k">del</span> <span class="n">idxNeighs</span>
+                    <span class="c1"># Sort by distance</span>
+                    <span class="n">neighsV</span> <span class="o">=</span> <span class="n">neighsV</span><span class="p">[</span><span class="n">idxSort</span><span class="p">,:]</span>
+                    <span class="n">neighsUsedV</span> <span class="o">=</span> <span class="n">neighsUsedV</span><span class="p">[</span><span class="n">idxSort</span><span class="p">,:]</span>
+                    <span class="c1"># Fill some empty voxels</span>
+                    <span class="n">idxFillable</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">neighsUsedV</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">minPct</span> <span class="o">*</span> <span class="p">(</span><span class="n">S</span><span class="o">**</span><span class="mi">3</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span> <span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+                    <span class="n">wMeanNum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">neighsUsedV</span> <span class="o">*</span> <span class="n">neighsV</span> <span class="o">*</span> <span class="n">distNeighs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+                    <span class="n">wMeanDen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">neighsUsedV</span> <span class="o">*</span> <span class="n">distNeighs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+                    <span class="n">V</span><span class="p">[</span><span class="n">idxEmpty</span><span class="p">[</span><span class="n">idxFillable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">wMeanNum</span><span class="p">[</span><span class="n">idxFillable</span><span class="p">]</span> <span class="o">/</span> <span class="n">wMeanDen</span><span class="p">[</span><span class="n">idxFillable</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>  
+                    <span class="n">usedV</span><span class="p">[</span><span class="n">idxEmpty</span><span class="p">[</span><span class="n">idxFillable</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">True</span>   
+                    <span class="c1"># Print some info</span>
+                    <span class="n">pctInternalEmpty</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">internalV</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">usedV</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">internalV</span><span class="p">)</span>
+                    <span class="k">print</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">Estimate of pct of internal empty voxels after filling with cube of side {0}: ({1}</span><span class="si">% i</span><span class="s1">nternal)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">pctInternalEmpty</span><span class="p">)</span>              
+                    <span class="c1"># Delete biggest arrays in inner loop                </span>
+                    <span class="k">del</span> <span class="n">idxEmpty</span><span class="p">,</span> <span class="n">neighsV</span><span class="p">,</span> <span class="n">neighsUsedV</span><span class="p">,</span> <span class="n">idxFillable</span><span class="p">,</span> <span class="n">wMeanNum</span><span class="p">,</span> <span class="n">wMeanDen</span>
+        
+        <span class="k">print</span> <span class="s1">&#39;Empty voxels filled when possible&#39;</span>
+        <span class="k">return</span> <span class="n">pctInternalEmpty</span>
+        
+        
+    <span class="k">def</span> <span class="nf">getVtkImageData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">vtkDataType</span><span class="p">):</span>
+        <span class="n">vtkV</span> <span class="o">=</span> <span class="n">nparray2vtkImageData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getNumpyArray1D</span><span class="p">(),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">),</span> <span class="n">scales</span><span class="p">,</span> <span class="n">vtkDataType</span><span class="p">)</span>        
+        <span class="k">return</span> <span class="n">vtkV</span>
+        
+    <span class="k">def</span> <span class="nf">getCoordsSmallestWrappingParallelepipedon</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">toExclude</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNumpyArray3D</span><span class="p">()</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">V</span> <span class="o">&lt;&gt;</span> <span class="n">toExclude</span><span class="p">)</span>
+        <span class="n">xa</span><span class="p">,</span> <span class="n">xb</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">ya</span><span class="p">,</span> <span class="n">yb</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">za</span><span class="p">,</span> <span class="n">zb</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">xa</span><span class="p">,</span> <span class="n">xb</span><span class="p">,</span> <span class="n">ya</span><span class="p">,</span> <span class="n">yb</span><span class="p">,</span> <span class="n">za</span><span class="p">,</span> <span class="n">zb</span>
+        </div>
+<div class="viewcode-block" id="VoxelArray3DFrom2DImages"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.VoxelArray3DFrom2DImages">[docs]</a><span class="k">class</span> <span class="nc">VoxelArray3DFrom2DImages</span><span class="p">(</span><span class="n">VoxelArray3D</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># Create voxel array for grey values</span>
+        <span class="c1">#self.V = VoxelArray3D(dataType=np.uint8, dims=(self.xl,self.yl,self.zl), scales=(self.fx,self.fy,self.fz))</span>
+        
+        <span class="c1"># Create voxel array for grey values indicating hox many times a voxel</span>
+        <span class="c1"># has been written</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contV</span> <span class="o">=</span> <span class="n">VoxelArray3D</span><span class="p">(</span><span class="n">dataType</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getDims</span><span class="p">())</span>
+        
+        <span class="c1"># Create voxel array for bool values indicating if the voxel contains</span>
+        <span class="c1"># raw data</span>
+        <span class="c1">#self.usedV = self.contV</span>
+        
+        <span class="c1"># Create voxel array for bool values indicating if the voxel belongs</span>
+        <span class="c1"># to the sequence of slices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">internalV</span> <span class="o">=</span> <span class="n">VoxelArray3D</span><span class="p">(</span><span class="n">dataType</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">getDims</span><span class="p">())</span>
+        
+        <span class="c1"># Create corner coordinates for previously written images</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xcPrev</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ycPrev</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zcPrev</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        
+    <span class="k">def</span> <span class="nf">getCounterVoxelArray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">contV</span>
+        
+    <span class="k">def</span> <span class="nf">getSilhouetteVoxelArray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">internalV</span>
+        
+    <span class="k">def</span> <span class="nf">setCounterVoxelArray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contV</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contV</span> <span class="o">=</span> <span class="n">contV</span>
+        
+    <span class="k">def</span> <span class="nf">setSilhouetteVoxelArray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">internalV</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">internalV</span> <span class="o">=</span> <span class="n">internalV</span>
+        
+    <span class="k">def</span> <span class="nf">getSubVoxelArray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">z1</span><span class="p">):</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDataByEdges</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
+        <span class="n">contV</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">contV</span><span class="o">.</span><span class="n">getSubVoxelArray</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
+        <span class="n">internalV</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">internalV</span><span class="o">.</span><span class="n">getSubVoxelArray</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
+        <span class="n">newV</span> <span class="o">=</span> <span class="n">VoxelArray3DFrom2DImages</span><span class="p">(</span><span class="n">dataType</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataType</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">scales</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fx</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fy</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fz</span><span class="p">))</span>
+        <span class="n">newV</span><span class="o">.</span><span class="n">setAllDataByNumpy3D</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+        <span class="n">newV</span><span class="o">.</span><span class="n">setCounterVoxelArray</span><span class="p">(</span><span class="n">contV</span><span class="p">)</span>
+        <span class="n">newV</span><span class="o">.</span><span class="n">setSilhouetteVoxelArray</span><span class="p">(</span><span class="n">internalV</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">newV</span>
+
+    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xMin</span><span class="p">,</span> <span class="n">xMax</span><span class="p">,</span> <span class="n">yMin</span><span class="p">,</span> <span class="n">yMax</span><span class="p">,</span> <span class="n">zMin</span><span class="p">,</span> <span class="n">zMax</span><span class="p">):</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">parent</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">xMin</span><span class="p">,</span> <span class="n">xMax</span><span class="p">,</span> <span class="n">yMin</span><span class="p">,</span> <span class="n">yMax</span><span class="p">,</span> <span class="n">zMin</span><span class="p">,</span> <span class="n">zMax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contV</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">xMin</span><span class="p">,</span> <span class="n">xMax</span><span class="p">,</span> <span class="n">yMin</span><span class="p">,</span> <span class="n">yMax</span><span class="p">,</span> <span class="n">zMin</span><span class="p">,</span> <span class="n">zMax</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">internalV</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">xMin</span><span class="p">,</span> <span class="n">xMax</span><span class="p">,</span> <span class="n">yMin</span><span class="p">,</span> <span class="n">yMax</span><span class="p">,</span> <span class="n">zMin</span><span class="p">,</span> <span class="n">zMax</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">writeImageByIdx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idxV</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">fillVoxMethod</span><span class="p">):</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fillVoxMethod</span> <span class="o">==</span> <span class="s1">&#39;avg&#39;</span><span class="p">:</span>
+            <span class="n">parent</span><span class="o">.</span><span class="n">setDataByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">,</span> <span class="n">parent</span><span class="o">.</span><span class="n">getDataByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contV</span><span class="o">.</span><span class="n">getDataByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contV</span><span class="o">.</span><span class="n">getDataByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="n">I</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contV</span><span class="o">.</span><span class="n">getDataByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">fillVoxMethod</span> <span class="o">==</span> <span class="s1">&#39;last&#39;</span><span class="p">:</span>
+            <span class="n">parent</span><span class="o">.</span><span class="n">setDataByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">,</span> <span class="n">I</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">fillVoxMethod</span> <span class="o">==</span> <span class="s1">&#39;max&#39;</span><span class="p">:</span>
+            <span class="n">parent</span><span class="o">.</span><span class="n">setDataByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">getDataByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">),</span> <span class="n">I</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contV</span><span class="o">.</span><span class="n">addConstByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">internalV</span><span class="o">.</span><span class="n">setDataByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">writeImageByCoords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">fillVoxMethod</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">coords</span>
+        <span class="n">idxV</span> <span class="o">=</span> <span class="n">xyz2idx</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writeImageByIdx</span><span class="p">(</span><span class="n">idxV</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">fillVoxMethod</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">fillGaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">parent</span><span class="o">.</span><span class="n">fillGaps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contV</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">internalV</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">updateWrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrapper</span><span class="p">,</span> <span class="n">corners</span><span class="p">,</span> <span class="n">cornersPrev</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span><span class="p">,</span> <span class="n">zc</span> <span class="o">=</span> <span class="n">corners</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">xcPrev</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ycPrev</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">zcPrev</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xcPrev</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ycPrev</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zcPrev</span> <span class="o">=</span> <span class="n">corners</span>
+        <span class="k">if</span> <span class="n">cornersPrev</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">xcPrev</span><span class="p">,</span> <span class="n">ycPrev</span><span class="p">,</span> <span class="n">zcPrev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xcPrev</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ycPrev</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zcPrev</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xcPrev</span><span class="p">,</span> <span class="n">ycPrev</span><span class="p">,</span> <span class="n">zcPrev</span> <span class="o">=</span> <span class="n">cornersPrev</span>
+        <span class="k">if</span> <span class="n">wrapper</span> <span class="o">==</span> <span class="s1">&#39;parallelepipedon&#39;</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s1">&#39;Creating parallelepipedon ...&#39;</span>
+            <span class="n">xcMin</span><span class="p">,</span> <span class="n">xcMax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">xc</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">xcPrev</span><span class="o">.</span><span class="n">min</span><span class="p">())),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="n">xc</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="n">xcPrev</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+            <span class="n">ycMin</span><span class="p">,</span> <span class="n">ycMax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">yc</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">ycPrev</span><span class="o">.</span><span class="n">min</span><span class="p">())),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="n">yc</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="n">ycPrev</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+            <span class="n">zcMin</span><span class="p">,</span> <span class="n">zcMax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">((</span><span class="n">zc</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">zcPrev</span><span class="o">.</span><span class="n">min</span><span class="p">())),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="n">zc</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span><span class="n">zcPrev</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+            <span class="n">xcInternal</span><span class="p">,</span> <span class="n">ycInternal</span><span class="p">,</span> <span class="n">zcInternal</span> <span class="o">=</span> <span class="n">getCubeCoords</span><span class="p">(([</span><span class="n">xcMin</span><span class="p">,</span><span class="n">xcMax</span><span class="p">],[</span><span class="n">ycMin</span><span class="p">,</span><span class="n">ycMax</span><span class="p">],[</span><span class="n">zcMin</span><span class="p">,</span><span class="n">zcMax</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="n">wrapper</span> <span class="o">==</span> <span class="s1">&#39;convex_hull&#39;</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s1">&#39;Creating convex hull ...&#39;</span>
+            <span class="n">cCurrent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">xc</span><span class="p">,</span><span class="n">yc</span><span class="p">,</span><span class="n">zc</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">cPrev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">xcPrev</span><span class="p">,</span><span class="n">ycPrev</span><span class="p">,</span><span class="n">zcPrev</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">cCurrent</span><span class="p">,</span><span class="n">cPrev</span><span class="p">):</span>
+                <span class="n">cHull</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">cCurrent</span><span class="p">,</span><span class="n">cPrev</span><span class="p">))</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">cInternal</span> <span class="o">=</span> <span class="n">getCoordsInConvexHull</span><span class="p">(</span><span class="n">cHull</span><span class="p">)</span>
+                    <span class="n">xcInternal</span><span class="p">,</span> <span class="n">ycInternal</span><span class="p">,</span> <span class="n">zcInternal</span> <span class="o">=</span> <span class="n">cInternal</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">cInternal</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span> <span class="n">cInternal</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="n">idxInternal</span> <span class="o">=</span> <span class="n">xyz2idx</span><span class="p">(</span><span class="n">xcInternal</span><span class="p">,</span> <span class="n">ycInternal</span><span class="p">,</span> <span class="n">zcInternal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zl</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">internalV</span><span class="o">.</span><span class="n">setDataByIdx</span><span class="p">(</span><span class="n">idxInternal</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="s1">&#39;Error in creating convex hull coordinates&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s1">&#39;The 2 slices are exactly overlapped. Impossible to create convex hull&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xcPrev</span> <span class="o">=</span> <span class="n">xc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ycPrev</span> <span class="o">=</span> <span class="n">yc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zcPrev</span> <span class="o">=</span> <span class="n">zc</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+</div>
+<div class="viewcode-block" id="getCoordsInConvexHull"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.getCoordsInConvexHull">[docs]</a><span class="k">def</span> <span class="nf">getCoordsInConvexHull</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create the convex hull for a list of points and the list of coorindates internal to it.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p : np.ndarray</span>
+<span class="sd">        N x 3 list of coordinates for which to calculate the cinvex hull. Coordinates should be integer.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        M x 3 array of coordinates, where M is the number of points internal to the convex hull.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get minimum and maximum coordinates</span>
+    <span class="n">xMin</span><span class="p">,</span> <span class="n">yMin</span><span class="p">,</span> <span class="n">zMin</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">xMax</span><span class="p">,</span> <span class="n">yMax</span><span class="p">,</span> <span class="n">zMax</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Create coordinates between maximim and minimum</span>
+    <span class="n">xCube</span><span class="p">,</span> <span class="n">yCube</span><span class="p">,</span> <span class="n">zCube</span> <span class="o">=</span> <span class="n">getCubeCoords</span><span class="p">(([</span><span class="n">xMin</span><span class="p">,</span><span class="n">xMax</span><span class="p">],[</span><span class="n">yMin</span><span class="p">,</span><span class="n">yMax</span><span class="p">],[</span><span class="n">zMin</span><span class="p">,</span><span class="n">zMax</span><span class="p">]))</span>
+    <span class="n">ci</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">xCube</span><span class="p">,</span> <span class="n">yCube</span><span class="p">,</span> <span class="n">zCube</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="c1"># Linear interpolation </span>
+    <span class="n">vi</span> <span class="o">=</span> <span class="n">griddata</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">p</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],)),</span> <span class="n">ci</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Delete points outside the convex hull</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">vi</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cInternal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">ci</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cInternal</span>
+</div>
+<div class="viewcode-block" id="getCubeCoords"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.getCubeCoords">[docs]</a><span class="k">def</span> <span class="nf">getCubeCoords</span><span class="p">(</span><span class="n">S</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create cube or parallelepipedon coordinates.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    S : mixed</span>
+<span class="sd">        Parallelepipedon or cube size.</span>
+<span class="sd">        If int, it represents the cube side, and must be an odd number. </span>
+<span class="sd">        The coordinates origin is in the center of the cube.</span>
+<span class="sd">        If list, it must contain 3 lists (for x, y and z), each one containing mininum and maximum coordinate values.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of 3 ``np.ndarray`` objects (for x, y and z), containing coordinate values into the parallelepipedon / cube.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">S</span><span class="p">,</span><span class="s1">&#39;__len__&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+        <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="n">l1</span><span class="p">:</span><span class="n">l2</span><span class="p">,</span><span class="n">l1</span><span class="p">:</span><span class="n">l2</span><span class="p">,</span><span class="n">l1</span><span class="p">:</span><span class="n">l2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span><span class="p">,</span> <span class="n">zz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">S</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">S</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span><span class="n">S</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span><span class="n">S</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="n">cx</span> <span class="o">=</span> <span class="n">xx</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="n">yy</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">cz</span> <span class="o">=</span> <span class="n">zz</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cz</span>
+    </div>
+<div class="viewcode-block" id="getSphereCoords"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.getSphereCoords">[docs]</a><span class="k">def</span> <span class="nf">getSphereCoords</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create sphere coordinates.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r : int</span>
+<span class="sd">        Radius.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        List of 3 ``np.ndarray`` objects (for x, y and z), containing coordinate values into sphere.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">getCubeCoords</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">points</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span><span class="o">.</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">spherePoints</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">distance</span><span class="o">&lt;=</span><span class="n">r</span><span class="p">]</span>
+    <span class="n">cx</span> <span class="o">=</span> <span class="n">spherePoints</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="n">spherePoints</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="n">cz</span> <span class="o">=</span> <span class="n">spherePoints</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cz</span>    
+    </div>
+<div class="viewcode-block" id="createRandomSpheresIn3DVA"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.createRandomSpheresIn3DVA">[docs]</a><span class="k">def</span> <span class="nf">createRandomSpheresIn3DVA</span><span class="p">(</span><span class="n">xl</span><span class="p">,</span> <span class="n">yl</span><span class="p">,</span> <span class="n">zl</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">rMax</span><span class="o">=</span><span class="s1">&#39;small&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create voxel array containing spheres with random position and radius.</span>
+<span class="sd">    Spheres voxels have maximun gray level, the rest has minumum grey level.</span>
+<span class="sd">    There is no internal check about spheres physically nesting into each other.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    xl : int</span>
+<span class="sd">        Voxel array size along x.</span>
+<span class="sd">        </span>
+<span class="sd">    yl : int</span>
+<span class="sd">        Voxel array size along y.</span>
+<span class="sd">        </span>
+<span class="sd">    zl : int</span>
+<span class="sd">        Voxel array size along z.</span>
+<span class="sd">        </span>
+<span class="sd">    N : int</span>
+<span class="sd">        Number of spheres.</span>
+<span class="sd">        </span>
+<span class="sd">    rMax : mixed</span>
+<span class="sd">        Maximum radius of the sphere.</span>
+<span class="sd">        If &#39;small&#39;, it is equivalent to 5% of the largest voxel array dimension.</span>
+<span class="sd">        If int, it is manually indicated.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.array(uint8)</span>
+<span class="sd">        Voxel array created.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">xl</span><span class="p">,</span><span class="n">yl</span><span class="p">,</span><span class="n">zl</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rMax</span> <span class="o">==</span> <span class="s1">&#39;small&#39;</span><span class="p">:</span>
+        <span class="n">rMax</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">((</span><span class="n">xl</span><span class="p">,</span><span class="n">yl</span><span class="p">,</span><span class="n">zl</span><span class="p">))</span>
+    <span class="n">centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">xl</span><span class="p">,</span><span class="n">yl</span><span class="p">,</span><span class="n">zl</span><span class="p">)</span>
+    <span class="n">radii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">rMax</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">N</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">centers</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">getSphereCoords</span><span class="p">(</span><span class="n">radii</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">+</span> <span class="n">centers</span><span class="p">[</span><span class="n">i</span><span class="p">,:][:,</span><span class="bp">None</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">,:]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">xl</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">yl</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">z</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">z</span> <span class="o">&lt;</span> <span class="n">zl</span><span class="p">)</span>
+        <span class="n">V</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">z</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">255</span>
+    <span class="k">return</span> <span class="n">V</span>
+
+</div>
+<div class="viewcode-block" id="idx2xyz"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.idx2xyz">[docs]</a><span class="k">def</span> <span class="nf">idx2xyz</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">xl</span><span class="p">,</span> <span class="n">yl</span><span class="p">,</span> <span class="n">zl</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transform a list of indices of 1D array into coordinates of a 3D volume of certain sizes.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    idx : np.ndarray</span>
+<span class="sd">        1D array to be converted. An increment of ``idx``</span>
+<span class="sd">        corresponds to a an increment of x. When reaching ``xl``, x is reset and </span>
+<span class="sd">        y is incremented of one. When reaching ``yl``, x and y are reset and z is</span>
+<span class="sd">        incremented.</span>
+<span class="sd">    </span>
+<span class="sd">    xl, yl, zl : int </span>
+<span class="sd">        Sizes for 3D volume.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list </span>
+<span class="sd">        List of 3 ``np.ndarray`` objects (for x, y and z), containing coordinate value.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">idx</span> <span class="o">/</span> <span class="p">(</span><span class="n">xl</span><span class="o">*</span><span class="n">yl</span><span class="p">))</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">remainder</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">xl</span><span class="o">*</span><span class="n">yl</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">r</span> <span class="o">/</span> <span class="n">xl</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">remainder</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">xl</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+</div>
+<div class="viewcode-block" id="xyz2idx"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.xyz2idx">[docs]</a><span class="k">def</span> <span class="nf">xyz2idx</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">xl</span><span class="p">,</span> <span class="n">yl</span><span class="p">,</span> <span class="n">zl</span><span class="p">,</span> <span class="n">idx</span><span class="o">=</span><span class="s1">&#39;counter&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transform coordinates of a 3D volume of certain sizes into a list of indices of 1D array.</span>
+<span class="sd">    This is the opposite of function ``idx2xyz()``.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x, y, z : np.ndarray</span>
+<span class="sd">        Coordinates to be converted.</span>
+<span class="sd">        </span>
+<span class="sd">    xl, yl, zl : int</span>
+<span class="sd">        Sizes for 3D volume.</span>
+<span class="sd">        </span>
+<span class="sd">    idx: str</span>
+<span class="sd">        Str ing indicating output type.</span>
+<span class="sd">        If &#39;counter&#39;, the output is an array of voxel IDs, incrementing while x coordinate is incrementing.</span>
+<span class="sd">        If &#39;list&#39;, a list (z,y,x) is created.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray or list</span>
+<span class="sd">        Voxel indices.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">x</span><span class="p">[</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="n">xl</span><span class="p">]</span> <span class="o">=</span> <span class="n">xl</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">y</span><span class="p">[</span><span class="n">y</span> <span class="o">&gt;=</span> <span class="n">yl</span><span class="p">]</span> <span class="o">=</span> <span class="n">yl</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">z</span><span class="p">[</span><span class="n">z</span> <span class="o">&gt;=</span> <span class="n">zl</span><span class="p">]</span> <span class="o">=</span> <span class="n">zl</span><span class="o">-</span><span class="mi">1</span>
+    <span class="n">x</span><span class="p">[</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">y</span><span class="p">[</span><span class="n">y</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">z</span><span class="p">[</span><span class="n">z</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="s1">&#39;counter&#39;</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">xl</span> <span class="o">+</span> <span class="n">z</span> <span class="o">*</span> <span class="p">(</span><span class="n">xl</span> <span class="o">*</span> <span class="n">yl</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="s1">&#39;list&#39;</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">idx</span>
+</div>
+<div class="viewcode-block" id="nparray2vtkImageData"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.nparray2vtkImageData">[docs]</a><span class="k">def</span> <span class="nf">nparray2vtkImageData</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">vtkScalarType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transform a 1D ``numpy`` array into ``vtk.vtkImageData`` object.</span>
+<span class="sd">    The object contains only one scalar component.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    v : np.ndarray</span>
+<span class="sd">        1D array to convert.</span>
+
+<span class="sd">    d : list</span>
+<span class="sd">        3-elem list of sizes of the ``vtk.vtkImageData``.</span>
+
+<span class="sd">    s : list</span>
+<span class="sd">        3-elem list of spacing factors of the ``vtk.vtkImageData`` (see `here &lt;http://www.vtk.org/doc/nightly/html/classvtkImageData.html#ab3288d13810266e0b30ba0632f7b5b0b&gt;`_).</span>
+
+<span class="sd">    vtkScalarType :</span>
+<span class="sd">        Scalar type to be allocated (e.g. ``vtk.VTK_UNSIGNED_CHAR``).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vtk.vtkImageData</span>
+<span class="sd">        object.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create source</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkImageData</span><span class="p">()</span>
+    <span class="n">source</span><span class="o">.</span><span class="n">SetDimensions</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="n">vtk</span><span class="o">.</span><span class="n">VTK_MAJOR_VERSION</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">source</span><span class="o">.</span><span class="n">SetNumberOfScalarComponents</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">source</span><span class="o">.</span><span class="n">SetScalarType</span><span class="p">(</span><span class="n">vtkScalarType</span><span class="p">)</span>
+        <span class="n">source</span><span class="o">.</span><span class="n">AllocateScalars</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">source</span><span class="o">.</span><span class="n">AllocateScalars</span><span class="p">(</span><span class="n">vtkScalarType</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">source</span><span class="o">.</span><span class="n">SetSpacing</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="c1"># Copy numpy voxel array to vtkDataArray</span>
+    <span class="n">dataArray</span> <span class="o">=</span> <span class="n">nps</span><span class="o">.</span><span class="n">numpy_to_vtk</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">array_type</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="n">source</span><span class="o">.</span><span class="n">GetPointData</span><span class="p">()</span><span class="o">.</span><span class="n">GetScalars</span><span class="p">()</span><span class="o">.</span><span class="n">DeepCopy</span><span class="p">(</span><span class="n">dataArray</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">source</span>
+</div>
+<div class="viewcode-block" id="vtkImageData2vti"><a class="viewcode-back" href="../../api/api.html#Py3DFreeHandUS.voxel_array_utils.vtkImageData2vti">[docs]</a><span class="k">def</span> <span class="nf">vtkImageData2vti</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Export a ``vtk.vtkImageData`` object to VTI file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filePath : str</span>
+<span class="sd">        Full path for the VTI to be created.</span>
+
+<span class="sd">    source : vtk.vtkImageData</span>
+<span class="sd">        object.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkXMLImageDataWriter</span><span class="p">()</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">SetFileName</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vtk</span><span class="o">.</span><span class="n">VTK_MAJOR_VERSION</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">SetInput</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">SetInputData</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">Write</span><span class="p">()</span>    
+    </div>
+<span class="k">def</span> <span class="nf">compound3D</span><span class="p">(</span><span class="n">V1</span><span class="p">,</span> <span class="n">V2</span><span class="p">,</span> <span class="n">S1</span><span class="p">,</span> <span class="n">S2</span><span class="p">,</span> <span class="n">O</span><span class="p">):</span>
+    
+    <span class="c1"># Show raw volumes</span>
+    
+    <span class="n">image1</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">V1</span><span class="p">)</span>
+    <span class="n">image2</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">V2</span><span class="p">)</span>
+    
+    <span class="c1"># Show raw solhouettes</span>
+    
+    <span class="n">content1</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">S1</span><span class="p">)</span>
+    <span class="n">content2</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">S2</span><span class="p">)</span> 
+    
+    <span class="c1"># Set the 3D rigid registration framework</span>
+    
+    <span class="n">fixed</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">Cast</span><span class="p">(</span><span class="n">image1</span><span class="p">,</span> <span class="n">sitk</span><span class="o">.</span><span class="n">sitkFloat32</span><span class="p">)</span>
+    <span class="n">moving</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">Cast</span><span class="p">(</span><span class="n">image2</span><span class="p">,</span> <span class="n">sitk</span><span class="o">.</span><span class="n">sitkFloat32</span><span class="p">)</span>
+    <span class="n">fixedContent</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">Cast</span><span class="p">(</span><span class="n">content1</span><span class="p">,</span> <span class="n">sitk</span><span class="o">.</span><span class="n">sitkFloat32</span><span class="p">)</span>
+    <span class="n">movingContent</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">Cast</span><span class="p">(</span><span class="n">content2</span><span class="p">,</span> <span class="n">sitk</span><span class="o">.</span><span class="n">sitkFloat32</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">command_iteration</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;{0:3} = {1:10.5f} : {2}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="o">.</span><span class="n">GetOptimizerIteration</span><span class="p">(),</span>
+                                       <span class="n">method</span><span class="o">.</span><span class="n">GetMetricValue</span><span class="p">(),</span>
+                                       <span class="n">method</span><span class="o">.</span><span class="n">GetOptimizerPosition</span><span class="p">()))</span>
+    
+    <span class="n">R</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">ImageRegistrationMethod</span><span class="p">()</span>
+    
+    <span class="c1">#R.SetMetricAsCorrelation()</span>
+    <span class="c1">#R.SetMetricAsJointHistogramMutualInformation()</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">SetMetricAsMattesMutualInformation</span><span class="p">()</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">SetOptimizerAsRegularStepGradientDescent</span><span class="p">(</span><span class="n">learningRate</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                                               <span class="n">minStep</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
+                                               <span class="n">numberOfIterations</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+                                               <span class="n">gradientMagnitudeTolerance</span><span class="o">=</span><span class="mf">1e-3</span>
+                                               <span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">SetOptimizerScalesFromJacobian</span><span class="p">()</span> 
+    <span class="c1">#R.SetOptimizerScalesFromPhysicalShift()</span>
+    
+<span class="c1">#    tx = sitk.VersorRigid3DTransform()</span>
+    
+<span class="c1">#    tx = sitk.AffineTransform(3)</span>
+    
+<span class="c1">#    transfromDomainMeshSize = (1,1,1)</span>
+<span class="c1">#    tx = sitk.BSplineTransformInitializer(fixed, transfromDomainMeshSize)</span>
+    
+    <span class="n">displacement_image</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">fixed</span><span class="o">.</span><span class="n">GetSize</span><span class="p">(),</span> <span class="n">sitk</span><span class="o">.</span><span class="n">sitkVectorFloat64</span><span class="p">)</span>
+    <span class="n">tx</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">DisplacementFieldTransform</span><span class="p">(</span><span class="n">displacement_image</span><span class="p">)</span>
+    
+    <span class="n">R</span><span class="o">.</span><span class="n">SetInitialTransform</span><span class="p">(</span><span class="n">tx</span><span class="p">)</span>
+    
+    <span class="n">R</span><span class="o">.</span><span class="n">SetInterpolator</span><span class="p">(</span><span class="n">sitk</span><span class="o">.</span><span class="n">sitkLinear</span><span class="p">)</span>
+    
+    <span class="n">R</span><span class="o">.</span><span class="n">AddCommand</span><span class="p">(</span> <span class="n">sitk</span><span class="o">.</span><span class="n">sitkIterationEvent</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">command_iteration</span><span class="p">(</span><span class="n">R</span><span class="p">)</span> <span class="p">)</span>
+    
+    <span class="c1"># Run registration </span>
+    
+<span class="c1">#    R.SetMetricFixedMask(content1)</span>
+<span class="c1">#    R.SetMetricMovingMask(content2)</span>
+    <span class="n">content12</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">S1</span> <span class="o">&amp;</span> <span class="n">S2</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">SetMetricFixedMask</span><span class="p">(</span><span class="n">content12</span><span class="p">)</span>
+    <span class="n">R</span><span class="o">.</span><span class="n">SetMetricMovingMask</span><span class="p">(</span><span class="n">content12</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">outTx</span> <span class="o">=</span> <span class="n">R</span><span class="o">.</span><span class="n">Execute</span><span class="p">(</span><span class="n">fixed</span><span class="p">,</span> <span class="n">moving</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s1">&#39;General error during registration&#39;</span>
+        <span class="k">print</span> <span class="n">e</span>
+        <span class="n">outTx</span> <span class="o">=</span> <span class="n">tx</span>
+    
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;-------&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">outTx</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Optimizer stop condition: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">GetOptimizerStopConditionDescription</span><span class="p">()))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot; Iteration: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">GetOptimizerIteration</span><span class="p">()))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot; Metric value: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">GetMetricValue</span><span class="p">()))</span>
+    
+    <span class="c1"># Run resampler for image compounding</span>
+    
+    <span class="n">resampler</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">ResampleImageFilter</span><span class="p">()</span>
+    <span class="n">resampler</span><span class="o">.</span><span class="n">SetReferenceImage</span><span class="p">(</span><span class="n">fixed</span><span class="p">)</span>
+    <span class="n">resampler</span><span class="o">.</span><span class="n">SetInterpolator</span><span class="p">(</span><span class="n">sitk</span><span class="o">.</span><span class="n">sitkLinear</span><span class="p">)</span>
+    <span class="n">resampler</span><span class="o">.</span><span class="n">SetDefaultPixelValue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">resampler</span><span class="o">.</span><span class="n">SetTransform</span><span class="p">(</span><span class="n">outTx</span><span class="p">)</span>    
+    <span class="n">movingRes</span> <span class="o">=</span> <span class="n">resampler</span><span class="o">.</span><span class="n">Execute</span><span class="p">(</span><span class="n">moving</span><span class="p">)</span>
+    <span class="n">image2Res</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">Cast</span><span class="p">(</span><span class="n">movingRes</span><span class="p">,</span> <span class="n">sitk</span><span class="o">.</span><span class="n">sitkUInt8</span><span class="p">)</span>
+    
+    <span class="c1"># Run resampler for silhouette compounding</span>
+    
+    <span class="n">resampler</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">ResampleImageFilter</span><span class="p">()</span>
+    <span class="n">resampler</span><span class="o">.</span><span class="n">SetReferenceImage</span><span class="p">(</span><span class="n">fixedContent</span><span class="p">)</span>
+    <span class="n">resampler</span><span class="o">.</span><span class="n">SetInterpolator</span><span class="p">(</span><span class="n">sitk</span><span class="o">.</span><span class="n">sitkLinear</span><span class="p">)</span>
+    <span class="n">resampler</span><span class="o">.</span><span class="n">SetDefaultPixelValue</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">resampler</span><span class="o">.</span><span class="n">SetTransform</span><span class="p">(</span><span class="n">outTx</span><span class="p">)</span>    
+    <span class="n">movingContentRes</span> <span class="o">=</span> <span class="n">resampler</span><span class="o">.</span><span class="n">Execute</span><span class="p">(</span><span class="n">movingContent</span><span class="p">)</span>
+    <span class="n">content2Res</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">Cast</span><span class="p">(</span><span class="n">movingContentRes</span><span class="p">,</span> <span class="n">sitk</span><span class="o">.</span><span class="n">sitkUInt8</span><span class="p">)</span>
+    
+    <span class="c1"># Create other useful images</span>
+    <span class="n">V2r</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetArrayFromImage</span><span class="p">(</span><span class="n">image2Res</span><span class="p">)</span>
+    <span class="n">B1</span> <span class="o">=</span> <span class="n">S1</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">B2</span> <span class="o">=</span> <span class="n">S2</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">B2r</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">GetArrayFromImage</span><span class="p">(</span><span class="n">content2Res</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">V12r</span> <span class="o">=</span> <span class="n">V1</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">V12r</span><span class="p">[</span><span class="n">B2r</span><span class="p">]</span> <span class="o">=</span> <span class="n">V2r</span><span class="p">[</span><span class="n">B2r</span><span class="p">]</span> <span class="c1"># puts image 2 on top of image 1</span>
+    <span class="n">V2r1</span> <span class="o">=</span> <span class="n">V2r</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">V2r1</span><span class="p">[</span><span class="n">B1</span><span class="p">]</span> <span class="o">=</span> <span class="n">V1</span><span class="p">[</span><span class="n">B1</span><span class="p">]</span>    <span class="c1"># puts image 1 on top of image 2</span>
+    <span class="n">V12rMax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">V1</span><span class="p">,</span> <span class="n">V2r</span><span class="p">)</span>
+    <span class="n">V12</span> <span class="o">=</span> <span class="n">V1</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">V12</span><span class="p">[</span><span class="n">B2</span><span class="p">]</span> <span class="o">=</span> <span class="n">V2</span><span class="p">[</span><span class="n">B2</span><span class="p">]</span>     <span class="c1"># puts image 2 on top of image 1</span>
+    <span class="n">V21</span> <span class="o">=</span> <span class="n">V2</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">V21</span><span class="p">[</span><span class="n">B1</span><span class="p">]</span> <span class="o">=</span> <span class="n">V1</span><span class="p">[</span><span class="n">B1</span><span class="p">]</span>     <span class="c1"># puts image 1 on top of image 2</span>
+    <span class="n">V12Max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">V1</span><span class="p">,</span> <span class="n">V2</span><span class="p">)</span>
+    
+    <span class="c1"># Show all data</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">Compose</span><span class="p">((</span>
+                      <span class="n">content1</span><span class="o">/</span><span class="mf">2.</span><span class="o">+</span><span class="n">content2</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span> <span class="c1"># silhouettes overlapping</span>
+                      <span class="n">image1</span><span class="p">,</span> <span class="c1"># fixed</span>
+                      <span class="n">image2</span><span class="p">,</span> <span class="c1"># moving</span>
+                      <span class="n">image1</span><span class="p">,</span> <span class="c1"># fixed</span>
+                      <span class="n">image2Res</span><span class="p">,</span> <span class="c1"># result moving</span>
+                      <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">V12</span><span class="p">),</span> <span class="c1"># moving on top of fixed</span>
+                      <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">V12r</span><span class="p">),</span> <span class="c1"># result moving on top of fixed</span>
+                      <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">V21</span><span class="p">),</span> <span class="c1"># fixed on top of moving</span>
+                      <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">V2r1</span><span class="p">),</span> <span class="c1"># fixed on top of result moving</span>
+                      <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">V12Max</span><span class="p">),</span> <span class="c1"># element-wise max between fixed and moving</span>
+                      <span class="n">sitk</span><span class="o">.</span><span class="n">GetImageFromArray</span><span class="p">(</span><span class="n">V12rMax</span><span class="p">),</span> <span class="c1"># element-wise max between fixed and result moving</span>
+                    <span class="p">))</span>
+    <span class="n">sitk</span><span class="o">.</span><span class="n">Show</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+    
+    <span class="c1"># Get data</span>
+    <span class="n">tx</span> <span class="o">=</span> <span class="n">sitk</span><span class="o">.</span><span class="n">VersorRigid3DTransform</span><span class="p">(</span><span class="n">outTx</span><span class="o">.</span><span class="n">GetInverse</span><span class="p">())</span>
+<span class="c1">#    tx = sitk.VersorRigid3DTransform(outTx)</span>
+    
+<span class="c1">#    tx = sitk.AffineTransform(outTx.GetInverse())</span>
+<span class="c1">#    tx = sitk.AffineTransform(outTx)</span>
+    
+    <span class="c1"># See http://insightsoftwareconsortium.github.io/SimpleITK-Notebooks/22_Transforms.html#Global-Transformations    </span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">O</span><span class="p">)[:,</span><span class="bp">None</span><span class="p">]</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">GetMatrix</span><span class="p">())</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">GetTranslation</span><span class="p">())[:,</span><span class="bp">None</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">GetCenter</span><span class="p">())[:,</span><span class="bp">None</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">C</span>
+    <span class="k">print</span> <span class="n">A</span>
+    <span class="k">print</span> <span class="n">t</span>
+    <span class="k">print</span> <span class="n">c</span>
+    
+    <span class="k">return</span> <span class="n">A</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">c</span>
+    
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Py3DFreeHandUS 1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Davide Monari.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
