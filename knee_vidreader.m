@@ -15,7 +15,7 @@ file = 'Analog_20181109_1531.mp4';
 % Play video
 % videoFReader = vision.VideoFileReader(file);
 % videoPlayer = vision.VideoPlayer;
-% while ~isDone(videoFReader)
+% while ~isDone(videoFReader)d
 %   videoFrame = videoFReader();
 %   videoPlayer(videoFrame);
 %   pause(0.1)
@@ -23,11 +23,11 @@ file = 'Analog_20181109_1531.mp4';
 
 %% Preprocessing
 v = VideoReader(file);
-frames = 1:10;                      % frames of interest
-im = rgb2gray(read(v,frames));           % convert image to grayscale
+frame = 10;                         % frames of interest
+im = rgb2gray(read(v,frame));       % convert image to grayscale
 crop_rect = [29.5 86.5 513 250];    % cropping parameters
 im = imcrop(im, crop_rect);         % crop image
-im_adjust = imadjust(im);           % magnify contrast
+im_adjust = imadjust(im,[0.01 0.1],[]); % magnify contrast
 imshow(im_adjust)
 
 %% 2-D superpixel oversegmentation of images
@@ -58,7 +58,16 @@ figure
 imshow(outputImage,'InitialMagnification',67)
 title('Superpixel posterization');
 
+%% Function: superseg
+% Perform superpixel oversegmentation on all frames of video
+v = superseg(file);
 
+% Play video
+figure
+for i = 1:length(v)
+    imshow(v{i});
+    pause(0.2);
+end
 
 %% Edge detection experiment
 % Compare original cropped and adjusted crop
