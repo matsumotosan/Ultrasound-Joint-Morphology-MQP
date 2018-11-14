@@ -13,21 +13,52 @@ clear; clc; close all;
 file = 'Analog_20181109_1531.mp4';
 
 % Play video
-videoFReader = vision.VideoFileReader(file);
-videoPlayer = vision.VideoPlayer;
-while ~isDone(videoFReader)
-  videoFrame = videoFReader();
-  videoPlayer(videoFrame);
-  pause(0.1)
-end
+% videoFReader = vision.VideoFileReader(file);
+% videoPlayer = vision.VideoPlayer;
+% while ~isDone(videoFReader)
+%   videoFrame = videoFReader();
+%   videoPlayer(videoFrame);
+%   pause(0.1)
+% end
 
-%% Read specific frames
+%% Preprocessing
 v = VideoReader(file);
-frames = 1:10;
-im = rgb2gray(read(v,4));           % convert image to grayscale
-crop_rect = [29.5 86.5 513 370];    % cropping parameters
-im = imcrop(im, crop_rect);
+frames = 1:10;                      % frames of interest
+im = rgb2gray(read(v,frames));           % convert image to grayscale
+crop_rect = [29.5 86.5 513 250];    % cropping parameters
+im = imcrop(im, crop_rect);         % crop image
 im_adjust = imadjust(im);           % magnify contrast
+imshow(im_adjust)
+
+%% 2-D superpixel oversegmentation of images
+n = 20;         % number of superpixels to create
+comp = 15;      % compactness: higher value makes superpixels more regularly shaped
+[L,N] = superpixels(im_adjust,n,'Compactness',comp);
+mask = boundarymask(L);
+
+% Compare to original image
+subplot(1,2,1)
+imshow(im_adjust)
+subplot(1,2,2)
+imshow(imoverlay(im_adjust,mask,'cyan'),'InitialMagnification',67);
+title({strcat('Number of superpixels: ', num2str(n)), ...
+    strcat('Compactness: ',num2str(comp))});
+
+% Superpixel posterization
+outputImage = zeros(size(im_adjust),'like',im_adjust);  % initialize zeros of similar type
+idx = label2idx(L); % create cell array of linear indices for superpixel positions
+numRows = size(im_adjust,1);
+numCols = size(im_adjust,2);
+for labelVal = 1:N
+    grayIdx = idx{labelVal};
+    outputImage(grayIdx) = mean(im_adjust(grayIdx));
+end    
+
+figure
+imshow(outputImage,'InitialMagnification',67)
+title('Superpixel posterization');
+
+
 
 %% Edge detection experiment
 % Compare original cropped and adjusted crop
@@ -92,6 +123,34 @@ title('Sobel');
 subplot(1,2,2);
 imshow(edges_sobel_h);
 title('Sobel (horizontal)');
+
+%% Cavity fill experiment
+im_fillholes = imfill(im_adjust, 'holes');
+im_fill = imfill(im_adjust);
+subplot(1,2,1)
+imshow(im_fillholes);
+title('imfill - holes');
+subplot(1,2,2)
+imshow(im_fill)
+title('imfill - no input');
+
+%% Image filtering - 2D Gaussian filter
+% Gaussian image filtering - commonly used to reduce noise
+sigma = 2;    % default: 0.5
+im_gaussfilter = imgaussfilt(im_adjust,sigma);
+
+% Compare to original contrast-enhanced image
+subplot(1,2,1)
+imshow(im_adjust)
+title('Original - contrast enhanced');
+subplot(1,2,2)
+imshow(im_gaussfilter);
+title(strcat('Gaussian filter (\sigma = ',num2str(sigma),')'));
+
+% Try edge detection
+
+%% Image filtering - bilateral filtering with Gaussian kernels
+
 
 %% Hough transform experiment
 [H,T,R] = hough(im_adjust);
