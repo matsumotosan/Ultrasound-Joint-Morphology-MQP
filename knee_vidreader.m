@@ -60,7 +60,7 @@ title('Superpixel posterization');
 
 %% Function: superseg
 % Perform superpixel oversegmentation on all frames of video
-v = superseg(file);
+v = superseg(file, [1000 50]);
 
 % Play video
 figure
