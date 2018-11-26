@@ -1,4 +1,4 @@
-function video = superseg(data, n)
+function video = superseg(data, n, comp)
 %SUPERSEG Perform superpixel oversegmentation on every frame in video
 %   Reads every frame in video and performs superpixel oversegmentation.
 %   Once complete, assign average binary value of of superpixel to
@@ -12,17 +12,19 @@ function video = superseg(data, n)
 
 v = VideoReader(data);
 cropreg = [30 87 515 250];  % cropping region for entire video
-comp = 5;                  % compactness of superpixellation
-video = {};
+comp = 5;                   % compactness of superpixellation
+video = {};                 % initialize video
 
 while hasFrame(v)
     f = readFrame(v);                   % read next frame of video
     f = rgb2gray(imcrop(f, cropreg));   % crop and convert to grayscale
     f = imadjust(f,[0.01,0.1],[]);      % increase contrast of frame
     
+    count = 1;
+    
     % Superpixel oversegmentation
     for i = n
-        [L,N] = superpixels(f,i,'Compactness',comp);
+        [L,N] = superpixels(f,i,'Compactness',comp(count));
 
         f_out = zeros(size(f),'like',f);    % initialize zeros for output image
         idx = label2idx(L);                 % linear indices of superpixel regions
