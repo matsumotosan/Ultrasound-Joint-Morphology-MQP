@@ -13,13 +13,13 @@ clear; clc; close all;
 file = 'Analog_20181109_1531.mp4';
 
 % Play video
-% videoFReader = vision.VideoFileReader(file);
-% videoPlayer = vision.VideoPlayer;
-% while ~isDone(videoFReader)d
-%   videoFrame = videoFReader();
-%   videoPlayer(videoFrame);
-%   pause(0.1)
-% end
+videoFReader = vision.VideoFileReader(file);
+videoPlayer = vision.VideoPlayer;
+while ~isDone(videoFReader)
+  videoFrame = videoFReader();
+  videoPlayer(videoFrame);
+  pause(0.01)
+end
 
 %% Preprocessing
 v = VideoReader(file);
@@ -59,14 +59,15 @@ imshow(outputImage,'InitialMagnification',67)
 title('Superpixel posterization');
 
 %% Function: superseg
+file = 'Analog_20181109_1531.mp4';
 % Perform superpixel oversegmentation on all frames of video
-v = superseg(file, [1000 50]);
+v = superseg(file,100,50);
 
 % Play video
 figure
 for i = 1:length(v)
     imshow(v{i});
-    pause(0.2);
+    pause(0.05);
 end
 
 %% Edge detection experiment
