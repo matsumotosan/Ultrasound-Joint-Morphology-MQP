@@ -4,7 +4,7 @@ clear; clc; close all
 hold all
 a = arduino;
 mpu = i2cdev(a,'0x68'); % mpu adress is normally 0x68
-writeRegister(mpu,hex2dec('B6'),hex2dec('00'),'int16'); %reset
+writeRegister(mpu,hex2dec('B6'),hex2dec('00'),'int16'); % reset
 data = zeros(10000,14,'int8'); % preallocating for speed
 j = 1;
 a1 = animatedline('Color',[1 0 0]); 
@@ -63,8 +63,11 @@ while(true)
         x = x + 1;
     end
     
-    %if your system is big-endian remove the swapbytes function
+    % Litte-endian system
     y = swapbytes(typecast(data(j,:),'int16'))
+    
+    % Big-endian system
+%     y = typecast(data(j,:),'int16')
     
     % Save acceleration and orientation data
     acc(j,:) = double([y(1), y(2), y(3)]);
