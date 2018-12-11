@@ -67,6 +67,7 @@ while T(end) <= 2000
             Angles = sscanf(sms(idx:end),'%f %f %f');
         end
     end    
+    
     Yaw = Angles(3);
     Pitch = Angles(2);
     Roll = Angles(1);

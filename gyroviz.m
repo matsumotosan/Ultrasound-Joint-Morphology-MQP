@@ -38,7 +38,7 @@ Ts = 0.02;
 i = 1;
 ata = 0;
 t = 0;
-tic % Start timer
+% tic % Start timer
 T(i)=0;
 FLAG_CASTING = false;
 CubH = [];
@@ -58,7 +58,8 @@ while(Flag_Initializing)
     end
 end
 
-while T(end) <= 2000
+tic % start timer here
+while T(end) <= 3000
 
     T(end+1)=T(end)+1;
     sms='a';
@@ -77,7 +78,7 @@ while T(end) <= 2000
     Pitch = Angles(2);
     Roll = Angles(1);
     
-    ypr = [ypr; Yaw, Pitch Roll];
+    ypr = [ypr; toc, Yaw, Pitch Roll];
     
     k = 1;
     vY = get(H(k),'YData');vX = get(H(k),'XData');
