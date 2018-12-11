@@ -44,13 +44,13 @@ R{2} = [cos(roll) -sin(roll) 0;sin(roll) cos(roll) 0;0 0 1];
     idx6 = [4 8 5 1];
     
     if isempty(CUBEH)
-        CUBEH(1) = fill3(Vertex(idx1,1),Vertex(idx1,2),Vertex(idx1,3),C);
+        CUBEH(1) = fill3(Vertex(idx1,1),Vertex(idx1,2),Vertex(idx1,3),[0 0 1]);
         CUBEH(2) = fill3(Vertex(idx2,1),Vertex(idx2,2),Vertex(idx2,3),[1 0 0]);
-        CUBEH(3) = fill3(Vertex(idx3,1),Vertex(idx3,2),Vertex(idx3,3),C);
-        CUBEH(4) = fill3(Vertex(idx4,1),Vertex(idx4,2),Vertex(idx4,3),C);
-        CUBEH(5) = fill3(Vertex(idx5,1),Vertex(idx5,2),Vertex(idx5,3),C);
-        CUBEH(6) = fill3(Vertex(idx6,1),Vertex(idx6,2),Vertex(idx6,3),C);
-        alpha(0.4);
+        CUBEH(3) = fill3(Vertex(idx3,1),Vertex(idx3,2),Vertex(idx3,3),[0 1 0]);
+        CUBEH(4) = fill3(Vertex(idx4,1),Vertex(idx4,2),Vertex(idx4,3),[1 1 0]);
+        CUBEH(5) = fill3(Vertex(idx5,1),Vertex(idx5,2),Vertex(idx5,3),[0 1 1]);
+        CUBEH(6) = fill3(Vertex(idx6,1),Vertex(idx6,2),Vertex(idx6,3),[1 0 1]);
+%         alpha(0.3);
     else
         set(CUBEH(1),'XData',Vertex(idx1,1),'YData',Vertex(idx1,2),'ZData',Vertex(idx1,3));
         set(CUBEH(2),'XData',Vertex(idx2,1),'YData',Vertex(idx2,2),'ZData',Vertex(idx2,3));

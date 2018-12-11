@@ -1,10 +1,10 @@
 %% Source
 % https://github.com/SayanSeth/MPU-6050-MATLAB-Toolbox/blob/master/Gyroscope_Visualization.m
 % SAYAN SETH
-
+clear; clc; close all
 %% Create serial object for Arduino
 baudrate = 115200;
-s = serial('/dev/cu.usbmodem14101','BaudRate',baudrate); % change the COM Port number as needed
+s = serial('/dev/tty.usbmodem14101','BaudRate',baudrate); % change the COM Port number as needed
 s.ReadAsyncMode = 'manual';
 set(s,'InputBufferSize',100);
 
@@ -16,6 +16,7 @@ catch err
     fclose(instrfind);
     error('Make sure you select the correct COM Port where the Arduino is connected.');
 end
+
 %% Prepare Figures
 Fig = figure('Position',[0 40 900 700],'ToolBar','none');
 Ax(1) = axes('Position',[.05 .75 0.90 .20]);
@@ -28,6 +29,9 @@ end
 Ax(2) = axes('Position',[.15 0.05 .6 .6],'CameraPosition',[10 -10 10]);
 hold on;
 axis([-1 1 -1 1 -1 1]);
+
+ypr = [];
+
 %% Read and plot the data from Arduino
 Tmax = 60;
 Ts = 0.02;
@@ -40,8 +44,6 @@ FLAG_CASTING = false;
 CubH = [];
 Angles = zeros(1,3);
 Flag_Initializing = true;
-
-%%
 
 while(Flag_Initializing)
     while(strcmp(s.TransferStatus,'read'))
@@ -56,7 +58,6 @@ while(Flag_Initializing)
     end
 end
 
-%%
 while T(end) <= 2000
 
     T(end+1)=T(end)+1;
@@ -71,10 +72,13 @@ while T(end) <= 2000
             Angles = sscanf(sms(idx:end),'%f %f %f');
         end
     end
+    
     Yaw = Angles(3);
     Pitch = Angles(2);
     Roll = Angles(1);
-
+    
+    ypr = [ypr; Yaw, Pitch Roll];
+    
     k = 1;
     vY = get(H(k),'YData');vX = get(H(k),'XData');
     set(H(k),'YData',[vY,Angles(k)]);set(H(k),'XData',[vX,T(end)]);
