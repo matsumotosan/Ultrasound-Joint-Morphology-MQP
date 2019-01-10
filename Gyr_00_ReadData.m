@@ -6,12 +6,12 @@
 close all;clear all;clc;
 
 %% Create serial object for Arduino
-a = arduino;
+%a = arduino;
 baudrate = 115200;
-port = '/dev/tty.usbmodem14101';
+port = 'COM5';
 s = serial(port,'BaudRate',baudrate); % change the COM Port number as needed
 s.ReadAsyncMode = 'manual';
-% s.InputBufferSize = 100;
+s.InputBufferSize = 100;
 
 %% Connect the serial port to Arduino
 try
