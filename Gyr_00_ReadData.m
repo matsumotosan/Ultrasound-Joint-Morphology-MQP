@@ -6,9 +6,15 @@
 close all;clear all;clc;
 
 %% Create serial object for Arduino
+
 %a = arduino;
 baudrate = 115200;
 port = 'COM5';
+
+% port = '/dev/tty.usbmodem14101';    % Shion
+% port = '/dev/cu.usbmodem14101';
+% port = 'COM4';
+
 s = serial(port,'BaudRate',baudrate); % change the COM Port number as needed
 s.ReadAsyncMode = 'manual';
 s.InputBufferSize = 100;
@@ -29,6 +35,7 @@ for k = 1:3
 end
 Ax(2) = axes('Position',[.15 0.03 .7 .7],'CameraPosition',[-9.1314 -11.9003 8.6603]);hold on;
 axis([-1 1 -1 1 -1 1]);
+
 %% Read and plot the data from Arduino
 Tmax = 60;Ts = 0.02; i = 1;ata = 0;t = 0;
 tic % Start timer
@@ -42,7 +49,7 @@ while(Flag_Initializing)
         pause(0.01);
     end    
     readasync(s);
-    sms = fscanf(s);
+    sms = fread(s);
     if ~strcmp(sms(1:3),'ypr')
         fprintf(sms)
     else
@@ -64,6 +71,7 @@ while T(end) <= 2000
             Angles = sscanf(sms(idx:end),'%f %f %f');
         end
     end    
+    
     Yaw = Angles(3);
     Pitch = Angles(2);
     Roll = Angles(1);
@@ -83,5 +91,6 @@ while T(end) <= 2000
     CubH = Plot_Cube(deg2rad(-Yaw),deg2rad(Pitch),deg2rad(Roll),Ax(2),CubH);
     drawnow;
 end
+
 fclose(s);
  
