@@ -6,11 +6,15 @@
 close all;clear all;clc;
 
 %% Create serial object for Arduino
-% a = arduino;
+
+%a = arduino;
 baudrate = 115200;
-port = '/dev/tty.usbmodem14101';    % Shion
+port = 'COM5';
+
+% port = '/dev/tty.usbmodem14101';    % Shion
 % port = '/dev/cu.usbmodem14101';
 % port = 'COM4';
+
 s = serial(port,'BaudRate',baudrate); % change the COM Port number as needed
 s.ReadAsyncMode = 'manual';
 s.InputBufferSize = 100;
