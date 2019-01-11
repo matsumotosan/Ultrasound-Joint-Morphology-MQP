@@ -5,12 +5,17 @@ clear; clc; close all
 run1_imu = cell2mat(struct2cell(load('recon_run1.mat')));
 run2_imu = cell2mat(struct2cell(load('recon_run2.mat')));
 
-rate = 0; % sampling rate
+% Sampling rate
+typr = cell2mat(struct2cell(load('typr.mat')));
+rate = mean(diff(typr(:,1)));
 
 % Plot IMU data
 t = 0:rate:rate * length(run1_imu);
 t = linspace(0,100,length(run1_imu));
 plot(t,run1_imu(:,1),t,run1_imu(:,2),t,run1_imu(:,3))
+legend('Yaw','Pitch','Roll')
+xlabel('t (s)')
+ylabel('Degrees (\circ)')
 
 %% Video data
 % Load video
@@ -19,8 +24,6 @@ vid_name = 'recon_run2.mp4';
 
 v = VideoReader(strcat(dir,'/',vid_name));
 % noFrames = v.NumberOfFrames;    % number of frames
-vHeight = v.Height;
-vWidth = v.Width;
 vDuration = v.Duration;
 
 % Read frames
@@ -42,23 +45,27 @@ end
 
 
 %% Orient frame in 3D
+% Cropped frame size
+[height,width] = size(frames{1});
+
 % Initialize 3D matrix of zeros;
-vol = zeros(vHeight/2,vHeight,vHeight/2);
-
-% Calculate window height and width from cropping window
-crHeight = rect(2) - rect(1);
-crWidth = rect(3) - rect(4);
-
+vol = zeros(height,width,width);
 
 % Orient individual frames in 3D
 for i = 1:length(frames)
-    f = zeros(vHeight/2,vHeight);
-    f = f(
+    % Template
+    temp = zeros(height,width,width);
+    temp(:,:,round(width/2)) = temp(:,:,round(width/2)) + double(frames{i});
     
-    r = zeros(vHeight/2,vHeight,vHeight/2);
+    % Orient frame
     
-    r = r(:, :, vHeight/4) + frames{i});
+    
+    % Add to global 
 end
 
+% Scatter in 3D
+figure; hold on
+[ii,jj] = find(frames{i});
+scatter3(ii,jj,1)
 
 
