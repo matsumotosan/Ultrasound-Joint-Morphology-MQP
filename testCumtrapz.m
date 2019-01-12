@@ -47,4 +47,24 @@ ylabel('Displacement (mm)');
 legend('d_x (Numerical)', 'd_y (Numerical)', 'd_z (Numerical)', ...
     'd_x (Analytical)', 'd_y (Analytical)', 'd_z (Analytical)');
 title('Comparison of Numerical and Analytic Results');
- 
+
+% Error analysis
+f_x_ana = @(x) -sin(x) + x;
+f_y_ana = @(x) -cos(x) + 1;
+f_z_ana = @(x) -4 * sin(x ./ 2) + 2 .* x;
+
+d_x_err = abs((f_x_ana(t) - postDisp(1,:)) ./ f_x_ana(t));
+d_y_err = abs((f_y_ana(t) - postDisp(2,:)) ./ f_y_ana(t));
+d_z_err = abs((f_z_ana(t) - postDisp(3,:)) ./ f_z_ana(t));
+
+d_x_err(isnan(d_x_err)) = 0;
+d_y_err(isnan(d_y_err)) = 0;
+d_z_err(isnan(d_z_err)) = 0;
+
+figure; hold on
+plot(t, d_x_err, t, d_y_err, t, d_z_err); grid on
+xlabel('Time (s)')
+ylabel('Relative Error');
+legend('x','y','z')
+title('Relative Error of Numerical Results')
+
