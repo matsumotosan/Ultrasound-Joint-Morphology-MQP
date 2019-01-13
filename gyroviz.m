@@ -146,24 +146,42 @@ fclose(s);
 
 %% Calculate displacement (x,y,z)
 % Nested for double integration
-acc = pose(:,5:7)';
-t = pose(:,1)';
-v = cumtrapz(t,acc,2);
-postDisp = cumtrapz(t,cumtrapz(t,acc,2),2);
+acc = pose(2:end,5:7);
+ypr = pose(2:end,2:4)';
+t = pose(2:end,1)/1000;
+v = cumtrapz(t',acc',2);
+postDisp = cumtrapz(t',cumtrapz(t',acc',2),2);
 
 % Plot displacement in x,y,z
 figure; hold on
-subplot(1,2,1)  % acceleration plot
-plot(t, acc(1,:), t, acc(2,:), t, acc(3,:)); grid on
+subplot(3,1,1)  % acceleration plot
+plot(t, acc(:,1), t, acc(:,2), t, acc(:,3)); grid on
 title('Acceleration Plot')
-xlabel('time (s)')
+xlabel('Time (s)')
 ylabel('Acceleration (mm/s^2)');
 legend('a_x','a_y','a_z');
 
-subplot(1,2,2)  % displacement plot
-plot(t, postDisp(1,:), t, postDisp(2,:), t, postDisp(3,:)); grid on
+subplot(3,1,2)  % displacement plot
+plot(t, postDisp(1,:)', t, postDisp(2,:)', t, postDisp(3,:)'); grid on
 title('Displacement Plot')
-xlabel('time (s)')
+xlabel('Time (s)')
 ylabel('Displacement (mm)');
 legend('d_x','d_y','d_z');
+
+subplot(3,1,3)  % angular displacement plot
+plot(t, ypr(1,:), t, ypr(2,:), t, ypr(3,:)); grid on
+title('Angular Displacement Plot')
+xlabel('Time (s)');
+ylabel('Degrees (\circ)');
+legend('Yaw', 'Pitch', 'Roll');
+
+%% Apply filter
+fs = 1 / mean(diff(t));     % sampling frequency
+acc_fil = lowpass(acc,20,fs);   % low pass filter
+
+figure; hold on
+plot(t,acc_fil,t,acc);
+
+
+
 
