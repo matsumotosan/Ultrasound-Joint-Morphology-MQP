@@ -46,7 +46,7 @@ t = 0;
 T(i) = 0;
 FLAG_CASTING = false;
 CubH = [];
-yprxyz = zeros(1,6);
+yprxyz = zeros(1,7);
 Flag_Initializing = true;
 
 % Setup
@@ -75,7 +75,7 @@ pose = zeros(1,7);
 figure(1); hold on
 
 % Collect measurements
-tic % start timer here
+% tic % start timer here
 
 % Stall data collection until IMU output stabilized
 STABLE = false;
@@ -85,10 +85,10 @@ while ~STABLE
     
     if ~isempty(idx)
         idx = idx(end) + 1;
-        yprxyz = sscanf(sms(idx:end),'%f %f %f %f %f %f', [1 6]);
+        yprxyz = sscanf(sms(idx:end),'%f %f %f %f %f %f %f',[1 7]);
     end
     
-    if all(abs(yprxyz(4:6)) < 20)
+    if all(abs(yprxyz(5:7)) < 15)
         STABLE = true;
     end
 end
@@ -100,27 +100,30 @@ while T(end) <= 3000
     idx = [];
     yprxyz = [0];
     
-    while isempty(idx) || numel(yprxyz)~=6
+    while isempty(idx) || numel(yprxyz)~=7
         sms = fscanf(s);
         idx = find(sms=='z');
         if ~isempty(idx)
             idx = idx(end) + 1;
-            yprxyz = sscanf(sms(idx:end),'%f %f %f %f %f %f', [1 6]);
-            t = toc;
+            yprxyz = sscanf(sms(idx:end),'%f %f %f %f %f %f %f', [1 7]);
+%             t = toc;
         end
     end
     
     % Append to matrix containing pose information
-    pose = [pose; [t, yprxyz]];
-    
+%     pose = [pose; [t, yprxyz]];
+    pose = [pose; yprxyz];
+
     % Update velocity and displacement - comment for speed (can calculate
     % displacement post-imaging based on acceleration data)
     dt = pose(end,1) - pose(end-1,1);
-    vel = vel + dt * pose(end,5:7);    % current velocity
-    disp = [disp; dt * vel + disp(end,:)];   % current displacement
+    vel = vel + dt * pose(end,5:7);         % current velocity
+    disp = [disp; dt * vel + disp(end,:)];  % current displacement
 
     % Plot
-    plot(t,pose(end,5), t,pose(end,6), t,pose(end,7));
+%     plot(t,pose(end,5), t,pose(end,6), t,pose(end,7));
+    fprintf('%7d %8.4f %8.4f %8.4f %5d %5d %5d', pose(end,1), pose(end,2), pose(end,3), pose(end,4), ...
+        pose(end,5), pose(end,6), pose(end,7));
 %     
 %     % Update plot (comment for faster sampling rate)
 %     k = 1;
