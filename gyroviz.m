@@ -149,8 +149,8 @@ fclose(s);
 acc = pose(2:end,5:7);
 ypr = pose(2:end,2:4)';
 t = pose(2:end,1)/1000;
-v = cumtrapz(t',acc',2);
-postDisp = cumtrapz(t',cumtrapz(t',acc',2),2);
+
+postDisp = calcDisp(acc,t);
 
 % Plot displacement in x,y,z
 figure; hold on
@@ -176,12 +176,34 @@ ylabel('Degrees (\circ)');
 legend('Yaw', 'Pitch', 'Roll');
 
 %% Apply filter
-fs = 1 / mean(diff(t));     % sampling frequency
-acc_fil = lowpass(acc,20,fs);   % low pass filter
+fs = 1 / mean(diff(t));         % sampling frequency
+acc_fil = lowpass(acc,1,fs);   % low pass filter
 
 figure; hold on
-plot(t,acc_fil,t,acc);
+subplot(3,1,1)
+plot(t,acc_fil(:,1),t,acc(:,1));
+subplot(3,1,2)
+plot(t,acc_fil(:,2),t,acc(:,2));
+subplot(3,1,3)
+plot(t,acc_fil(:,3),t,acc(:,3));
 
+%% Calculate displacement with filtered linear acceleration
+disp_fil = calcDisp(acc_fil,t);
 
+% Plot displacement in x,y,z
+figure; hold on
+subplot(2,1,1)  % acceleration plot
+plot(t, acc_fil(:,1), t, acc_fil(:,2), t, acc_fil(:,3)); grid on
+title('Filtered Acceleration Plot')
+xlabel('Time (s)')
+ylabel('Acceleration (mm/s^2)');
+legend('a_x','a_y','a_z');
+
+subplot(2,1,2)  % displacement plot
+plot(t, disp_fil(1,:)', t, disp_fil(2,:)', t, disp_fil(3,:)'); grid on
+title('Filtered Displacement Plot')
+xlabel('Time (s)')
+ylabel('Displacement (mm)');
+legend('d_x','d_y','d_z');
 
 
