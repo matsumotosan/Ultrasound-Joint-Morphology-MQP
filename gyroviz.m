@@ -179,26 +179,7 @@ legend('Yaw', 'Pitch', 'Roll');
 fs = 1 / mean(diff(t));                     % sampling frequency
 % acc_fil = lowpass(acc,1,fs);              % conventional low pass filter
 
-d = designfilt('lowpassfir', ...
-    'PassbandFrequency',0.03,'StopbandFrequency',0.08, ...
-    'PassbandRipple',0.5,'StopbandAttenuation',65, ...
-    'DesignMethod','equiripple');
-
-% % FFT of the acc data
-% T = 1/fs;             % Sampling period       
-% L = length(acc);      % Length of signal
-% t = (0:L-1)*T;        % Time vector
-% Y = fft(acc);
-% P2 = abs(Y/L);
-% P1 = P2(1:L/2+1);
-% P1(2:end-1) = 2*P1(2:end-1);
-% f = fs*(0:(L/2))/L;
-% plot(f,P1) 
-% title('Single-Sided Amplitude Spectrum of Acc(t)')
-% xlabel('f (Hz)')
-% ylabel('|P1(f)|')
-
-acc_fil = filtfilt(d,acc);   % zero-phase digital filter
+acc_fil = lowpassfilt(acc);
 accel_zero = zeros(1,length(acc_fil));
 
 figure; hold on
