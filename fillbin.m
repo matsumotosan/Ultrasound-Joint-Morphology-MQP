@@ -8,7 +8,7 @@ function vox = fillbin(frame,pose,vox)
 for i = 1:h
     for j = 1:w
         % Find voxel the pixel belongs to
-        [a,b,c] = findVox(pose);
+        newPos = findPos(pose);
         
         if vox(a,b,c) == 0  % voxel is empty
             % Fill voxel with pixel value

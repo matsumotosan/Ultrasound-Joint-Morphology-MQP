@@ -39,7 +39,6 @@ while hasFrame(v)
     i = i + 1;
 end
 
-
 %% Synchrnoize IMU and video
 
 
