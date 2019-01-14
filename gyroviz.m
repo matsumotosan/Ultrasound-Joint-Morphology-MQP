@@ -180,18 +180,34 @@ fs = 1 / mean(diff(t));         % sampling frequency
 % acc_fil = lowpass(acc,1,fs);   % conventional low pass filter
 
 d = designfilt('lowpassfir', ...
-    'PassbandFrequency',0.15,'StopbandFrequency',0.2, ...
-    'PassbandRipple',1,'StopbandAttenuation',65, ...
+    'PassbandFrequency',0.03,'StopbandFrequency',0.08, ...
+    'PassbandRipple',0.5,'StopbandAttenuation',65, ...
     'DesignMethod','equiripple');
+
 acc_fil = filtfilt(d,acc);   % zero-phase digital filter
+
+% [r c] = size(acc_fil);
+
+accel_zero = zeros(1,length(acc_fil));
 
 figure; hold on
 subplot(3,1,1)
-plot(t,acc_fil(:,1),t,acc(:,1));
+plot(t,acc_fil(:,1),t,acc(:,1),t,accel_zero,'k');
+title('Angular Displacement Yaw (x)')
+xlabel('Time (s)');
+ylabel('Acceleration (mm/s^2)');
+
 subplot(3,1,2)
-plot(t,acc_fil(:,2),t,acc(:,2));
+plot(t,acc_fil(:,2),t,acc(:,2),t,accel_zero,'k');
+title('Angular Displacement Pitch (y)')
+xlabel('Time (s)');
+ylabel('Acceleration (mm/s^2)');
+
 subplot(3,1,3)
-plot(t,acc_fil(:,3),t,acc(:,3));
+plot(t,acc_fil(:,3),t,acc(:,3),t,accel_zero,'k');
+title('Angular Displacement Roll (z)')
+xlabel('Time (s)');
+ylabel('Acceleration (mm/s^2)');
 
 %% Calculate displacement with filtered linear acceleration
 disp_fil = calcDisp(acc_fil,t);
