@@ -177,7 +177,13 @@ legend('Yaw', 'Pitch', 'Roll');
 
 %% Apply filter
 fs = 1 / mean(diff(t));         % sampling frequency
-acc_fil = lowpass(acc,1,fs);   % low pass filter
+% acc_fil = lowpass(acc,1,fs);   % conventional low pass filter
+
+d = designfilt('lowpassfir', ...
+    'PassbandFrequency',0.15,'StopbandFrequency',0.2, ...
+    'PassbandRipple',1,'StopbandAttenuation',65, ...
+    'DesignMethod','equiripple');
+acc_fil = filtfilt(d,acc);   % zero-phase digital filter
 
 figure; hold on
 subplot(3,1,1)
