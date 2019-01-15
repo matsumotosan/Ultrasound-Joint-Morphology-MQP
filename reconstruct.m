@@ -33,38 +33,12 @@ rect = [30, 87, 510, 250];
 
 while hasFrame(v)
     frames{i} = imcrop(rgb2gray(readFrame(v)),rect);
-%     imshow(frame, 'Parent', currAxes);
+%     imshow(frame,'Parent',currAxes);
 %     currAxes.Visible = 'off';
 %     pause(0.01);
     i = i + 1;
 end
 
 %% Synchrnoize IMU and video
-
-
-
-%% Orient frame in 3D
-% Cropped frame size
-[height,width] = size(frames{1});
-
-% Initialize 3D matrix of zeros;
-vol = zeros(height,width,width);
-
-% Orient individual frames in 3D
-for i = 1:length(frames)
-    % Template
-    temp = zeros(height,width,width);
-    temp(:,:,round(width/2)) = temp(:,:,round(width/2)) + double(frames{i});
-    
-    % Orient frame
-    
-    
-    % Add to global 
-end
-
-% Scatter in 3D
-figure; hold on
-[ii,jj] = find(frames{i});
-scatter3(ii,jj,1)
 
 

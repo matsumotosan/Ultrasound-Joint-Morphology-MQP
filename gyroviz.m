@@ -154,14 +154,14 @@ postDisp = calcDisp(acc,t);
 
 % Plot displacement in x,y,z
 figure; hold on
-subplot(3,1,1)  % acceleration plot
+subplot(1,2,1)  % acceleration plot
 plot(t, acc(:,1), t, acc(:,2), t, acc(:,3)); grid on
 title('Acceleration Plot')
 xlabel('Time (s)')
 ylabel('Acceleration (mm/s^2)');
 legend('a_x','a_y','a_z');
 
-subplot(3,1,2)  % displacement plot
+subplot(1,2,2)  % displacement plot
 plot(t, postDisp(1,:)', t, postDisp(2,:)', t, postDisp(3,:)'); grid on
 title('Displacement Plot')
 xlabel('Time (s)')

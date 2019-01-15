@@ -1,19 +1,16 @@
-function newPos = findPos(pose)
-%UNTITLED6 Summary of this function goes here
-%   function to rotate the coordinates given input angles in three axes
+function pixCoord = findPos(pose,pixelCount,defaultCoord)
+%findPos Find coordinates of voxels to enter pixel values given linear
+%displacement and rotation data.
 
-% Rotation angles
-theta = pose(1);
-phi = pose(2);
-omega = pose(3);
+% Rotation angles (degrees)
+theta = pose(2);    % x-axis rotation
+phi = pose(3);      % y-axis rotation
+omega = pose(4);    % z-axis rotation
 
-% 3D mesh grid
-dx = 5;
-dy = 5;
-dz = 5;
-x = -50:dx:50;
-y = 0:-dy:-100;
-z = 0;
+% Frame plane (before transformation)
+x = linspace(defaultCoord(1),defaultCoord(2),pixelCount(1));
+y = linspace(defaultCoord(3),defaultCoord(4),pixelCount(2));
+z = defaultCoord(5);
 [X,Y,Z] = meshgrid(x,y,z);
 X = X(:)'; Y = Y(:)'; Z = Z(:)';
 
@@ -23,19 +20,21 @@ Ry = [cos(phi) 0 sin(phi); 0 1 0; -sin(phi) 0 cos(phi)];
 Rz = [cos(omega) -sin(omega) 0; sin(omega) cos(omega) 0; 0 0 1];
 
 % Rotate coordinates
-newPos = Rx * Ry * Rz * [X; Y; Z];
-newPos(1,:) = newPos(1,:) + pose(4);
-newPos(2,:) = newPos(2,:) + pose(5);
-newPos(3,:) = newPos(3,:) + pose(6);
+pixCoord = Rx * Ry * Rz * [X; Y; Z];
+pixCoord(1,:) = pixCoord(1,:) + pose(5);
+pixCoord(2,:) = pixCoord(2,:) + pose(6);
+pixCoord(3,:) = pixCoord(3,:) + pose(7);
+pixCoord = pixCoord';
 
-% figure
-% scatter3(X,Y,Z);
-% hold on;
-% scatter3(newPos(1,:),newPos(2,:),newPos(3,:));
-% xlabel('x')
-% ylabel('y')
-% zlabel('z')
-% legend('Original','Transformed');
+figure
+scatter3(X,Y,Z);
+hold on;
+scatter3(pixCoord(:,1),pixCoord(:,2),pixCoord(:,3));
+xlabel('x')
+ylabel('y')
+zlabel('z')
+title('Transformed Scan Plane');
+legend('Original','Transformed');
 
 end
 
