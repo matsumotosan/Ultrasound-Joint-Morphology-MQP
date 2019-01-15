@@ -122,7 +122,7 @@ while T(end) <= 3000
 
     % Plot
 %     plot(t,pose(end,5), t,pose(end,6), t,pose(end,7));
-    fprintf('%7d %8.4f %8.4f %8.4f %5d %5d %5d', pose(end,1), pose(end,2), pose(end,3), pose(end,4), ...
+    fprintf('%7d %8.4f %8.4f %8.4f %5d %5d %5d\n', pose(end,1), pose(end,2), pose(end,3), pose(end,4), ...
         pose(end,5), pose(end,6), pose(end,7));
 %     
 %     % Update plot (comment for faster sampling rate)
@@ -154,14 +154,14 @@ postDisp = calcDisp(acc,t);
 
 % Plot displacement in x,y,z
 figure; hold on
-subplot(3,1,1)  % acceleration plot
+subplot(1,2,1)  % acceleration plot
 plot(t, acc(:,1), t, acc(:,2), t, acc(:,3)); grid on
 title('Acceleration Plot')
 xlabel('Time (s)')
 ylabel('Acceleration (mm/s^2)');
 legend('a_x','a_y','a_z');
 
-subplot(3,1,2)  % displacement plot
+subplot(1,2,2)  % displacement plot
 plot(t, postDisp(1,:)', t, postDisp(2,:)', t, postDisp(3,:)'); grid on
 title('Displacement Plot')
 xlabel('Time (s)')
@@ -176,35 +176,27 @@ ylabel('Degrees (\circ)');
 legend('Yaw', 'Pitch', 'Roll');
 
 %% Apply filter
-fs = 1 / mean(diff(t));         % sampling frequency
-% acc_fil = lowpass(acc,1,fs);   % conventional low pass filter
+fs = 1 / mean(diff(t));                     % sampling frequency
+% acc_fil = lowpass(acc,1,fs);              % conventional low pass filter
 
-d = designfilt('lowpassfir', ...
-    'PassbandFrequency',0.03,'StopbandFrequency',0.08, ...
-    'PassbandRipple',0.5,'StopbandAttenuation',65, ...
-    'DesignMethod','equiripple');
-
-acc_fil = filtfilt(d,acc);   % zero-phase digital filter
-
-% [r c] = size(acc_fil);
-
+acc_fil = lowpassfilt(acc);
 accel_zero = zeros(1,length(acc_fil));
 
 figure; hold on
 subplot(3,1,1)
-plot(t,acc_fil(:,1),t,acc(:,1),t,accel_zero,'k');
+plot(t,acc_fil(:,1),t,acc(:,1),t,accel_zero);
 title('Angular Displacement Yaw (x)')
 xlabel('Time (s)');
 ylabel('Acceleration (mm/s^2)');
 
 subplot(3,1,2)
-plot(t,acc_fil(:,2),t,acc(:,2),t,accel_zero,'k');
+plot(t,acc_fil(:,2),t,acc(:,2),t,accel_zero);
 title('Angular Displacement Pitch (y)')
 xlabel('Time (s)');
 ylabel('Acceleration (mm/s^2)');
 
 subplot(3,1,3)
-plot(t,acc_fil(:,3),t,acc(:,3),t,accel_zero,'k');
+plot(t,acc_fil(:,3),t,acc(:,3),t,accel_zero);
 title('Angular Displacement Roll (z)')
 xlabel('Time (s)');
 ylabel('Acceleration (mm/s^2)');

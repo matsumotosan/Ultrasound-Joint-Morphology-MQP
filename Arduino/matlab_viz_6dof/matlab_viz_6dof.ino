@@ -109,12 +109,12 @@ void setup()
 
   // supply your own gyro offsets here, scaled for min sensitivity
 
-    mpu.setXAccelOffset(-2141);
-    mpu.setYAccelOffset(-92);
-    mpu.setZAccelOffset(834);
-    mpu.setXGyroOffset(-19);
-    mpu.setYGyroOffset(-110);
-    mpu.setZGyroOffset(-26);
+    mpu.setXAccelOffset(-1709);
+    mpu.setYAccelOffset(-3497);
+    mpu.setZAccelOffset(1016);
+    mpu.setXGyroOffset(107);
+    mpu.setYGyroOffset(42);
+    mpu.setZGyroOffset(-16);
     
   
   // make sure it worked (returns 0 if so)
@@ -228,7 +228,7 @@ void loop()
 #endif
 
 // off - stabilized
-    if ((abs(aaWorld.x) < 10) & (abs(aaWorld.y) < 10) & (abs(aaWorld.z) < 10)) {
+    if ((abs(aaWorld.x) < 5) & (abs(aaWorld.y) < 5) & (abs(aaWorld.z) < 5)) {
       digitalWrite(LED_PIN, LOW);
       stable = true;
     }
