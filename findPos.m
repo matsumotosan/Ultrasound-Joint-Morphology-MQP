@@ -26,15 +26,15 @@ pixCoord(2,:) = pixCoord(2,:) + pose(6);
 pixCoord(3,:) = pixCoord(3,:) + pose(7);
 pixCoord = pixCoord';
 
-figure
-scatter3(X,Y,Z);
-hold on;
-scatter3(pixCoord(:,1),pixCoord(:,2),pixCoord(:,3));
-xlabel('x')
-ylabel('y')
-zlabel('z')
-title('Transformed Scan Plane');
-legend('Original','Transformed');
+% figure
+% scatter3(X,Y,Z);
+% hold on;
+% scatter3(pixCoord(:,1),pixCoord(:,2),pixCoord(:,3));
+% xlabel('x')
+% ylabel('y')
+% zlabel('z')
+% title('Transformed Scan Plane');
+% legend('Original','Transformed');
 
 end
 
