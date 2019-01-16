@@ -16,6 +16,10 @@ switch nargin
         if ((mod(n,2) == 0) || (floor(n) ~= n) || (n < 0))
             error('n must be odd integer greater than 1')
         end
+        
+        % N-D nearest point search
+        k = dsearchn(voxCoord,pixCoord);
+        
         xtra = (n - 1) / 2; % number of extra voxels on each side
         a = k(1) - xtra:1:k(1) + xtra;
         b = k(2) - xtra:1:k(2) + xtra;
