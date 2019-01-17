@@ -12,7 +12,7 @@ close all; clear; clc;
 
 vid = videoinput('winvideo',1,'UYVY_720x480');
 
-triggerconfig(vid, 'Manual');
+triggerconfig(vid,'Manual');
 vid.FramesPerTrigger = 1;
 
 start(vid)
