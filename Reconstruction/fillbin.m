@@ -21,6 +21,7 @@ vox2add = zeros(voxSz(1),voxSz(2),voxSz(3));    % initialize bin
 vox2add(:,:,floor(voxSz(3) / 2)) = vox2add(:,:,floor(voxSz(3) / 2)) + frame;
 
 % Rotate frame in bin
+% Try imwarp
 % Fill voxels in output volume outside of limits of original volume with -1
 vox2add = imrotate3(vox2add, pose(2), [1 0 0], 'nearest', 'loose', ...
     'FillValues', -1);
@@ -30,7 +31,7 @@ vox2add = imrotate3(vox2add, pose(4), [0 0 1], 'nearest', 'loose', ...
     'FillValues', -1);
 
 % Find indices of -1 in output volume
-idx = find(vox2add < 0);
+idx = find(vox2add == -1);
 [I,J,K] = ind2sub(size(vox2add),idx);
 I = unique(I);
 J = unique(J);
@@ -46,8 +47,8 @@ end
 if (c > voxSz(3))
     
 end
-newA = [A, zeros(size(A, 1), size(B, 2)-size(A, 2)); zeros(size(B, 1)-size(A, 1), size(B, 2))];
 
+newA = [A, zeros(size(A, 1), size(B, 2)-size(A, 2)); zeros(size(B, 1)-size(A, 1), size(B, 2))];
 vox = vox + vox2add;
 
 % % Coordinates of frame corners before transformation (x1 x2 y1 y2 z)
