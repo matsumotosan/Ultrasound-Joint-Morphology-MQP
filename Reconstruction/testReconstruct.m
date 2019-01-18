@@ -19,11 +19,11 @@ while hasFrame(v)
 end
 
 %% Load pose data
-pose = [10000 10 0 0 0 0 0]; % [yaw,pitch,roll,x,y,z]
+pose = [10000 10 0 0 0 0 0]; % [time, yaw,pitch,roll,x,y,z]
 
 %% Initialize voxels
 % Initialize voxels to hold reconstruction data
-vox_dim = [251 511 50];   % reconstruction volume size
+vox_dim = [251 511 10];   % reconstruction volume size
 vox = zeros(vox_dim(1),vox_dim(2),vox_dim(3));   % initialize matrix of zeros
 
 % Real space 3D coordinates of each voxel
@@ -38,7 +38,7 @@ voxCoord = [X(:),Y(:),Z(:)];
 %% Distribution step
 filledBin = fillbin(frames{1}, pose, vox, voxCoord);
 
-idx = find(filledBin == 1);
+idx = find(filledBin);
 [a,b,c] = ind2sub(vox_dim,idx);
 scatter3(a,b,c,'k.'); hold on
 xlabel('x')

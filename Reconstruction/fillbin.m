@@ -14,18 +14,31 @@ function vox = fillbin(frame,pose,vox,voxCoord)
 %                    method
 %
 
-voxSz = size(vox);
-vox2add = zeros(voxSz(1),voxSz(2),voxSz(3));
+voxSz = size(vox);  % dimension of bin
+vox2add = zeros(voxSz(1),voxSz(2),voxSz(3));    % initialize bin
 
+% Add frame to bin
 vox2add(:,:,floor(voxSz(3) / 2)) = vox2add(:,:,floor(voxSz(3) / 2)) + frame;
-vox2add = imrotate3(vox2add, pose(2), [1 0 0]);
-vox2add = imrotate3(vox2add, pose(3), [0 1 0]);
-vox2add = imrotate3(vox2add, pose(4), [0 0 1]);
 
-% Update size of vox if necessary
-[a,b,c] = size(vox2add);
+% Rotate frame in bin
+% Fill voxels in output volume outside of limits of original volume with -1
+vox2add = imrotate3(vox2add, pose(2), [1 0 0], 'nearest', 'loose', ...
+    'FillValues', -1);
+vox2add = imrotate3(vox2add, pose(3), [0 1 0], 'nearest', 'loose', ...
+    'FillValues', -1);
+vox2add = imrotate3(vox2add, pose(4), [0 0 1], 'nearest', 'loose', ...
+    'FillValues', -1);
+
+% Find indices of -1 in output volume
+idx = find(vox2add < 0);
+[I,J,K] = ind2sub(size(vox2add),idx);
+I = unique(I);
+J = unique(J);
+K = unique(K);
+
+% Update size of vox as necessary
 if (a > voxSz(1))
-    padarray();
+%     padarray(vox,[],);
 end
 if (b > voxSz(2))
     
