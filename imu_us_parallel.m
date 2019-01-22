@@ -16,7 +16,7 @@ mr = matlabroot;            % location of MATLAB in directory
 sr = which('gyroviz.m');    % path to gyroviz.m
 
 % Windows - evaluate command in bash
-eval(strcat('!matlab -nodesktop -nosplash -r'," ",sr," ",'&'))
+eval(strcat('!matlab -nodesktop -nosplash -r'," ", '"run(', "'", sr, "'",')"'))
 % eval('!matlab -nodesktop -nosplash -r "gyroviz.m" &')
 
 % MAC

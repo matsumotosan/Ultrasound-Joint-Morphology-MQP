@@ -11,7 +11,8 @@ clear; clc; close all
 baudrate = 115200;
 
 %port = '/dev/tty.usbmodem14101'; %for Shion
-port = 'COM5'; %for Rosie
+%port = 'COM5'; %for Rosie
+port = 'COM6'; %for Olivia
 s = serial(port,'BaudRate',baudrate);
 s.ReadAsyncMode = 'manual';
 set(s,'InputBufferSize',100);
