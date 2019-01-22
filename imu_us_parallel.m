@@ -1,30 +1,22 @@
 %% Acquire IMU data and US images simultaneously
 % Requires Parallel Processing Toolbox
 % This script contains program to collect US images
-clear; close all;
 
 % Close vid instance if one exists
 if exist('vid')
     stop(vid);
 end
 
-clc
+clear; close all; clc
 
 %% Idea 1: Open another MATLAB instance
 % Evaluate terminal command through MATLAB
 mr = matlabroot;            % location of MATLAB in directory
 sr = which('gyroviz.m');    % path to gyroviz.m
 
-% Windows - evaluate command in bash
+% Needs Windows OS - evaluate command in bash
 eval(strcat('!matlab -nodesktop -nosplash -r'," ",sr," ",'&'))
 % eval('!matlab -nodesktop -nosplash -r "gyroviz.m" &')
-
-% MAC
-% Add following to end of .bash_profile
-% (located in home directory - type "cd ~/.bash_profile" in Terminal)
-%
-% export PATH=$PATH:/Applications/MATLAB_R2015b.app/bin/
-% eval('!osascript -e ''tell application "Terminal"'' -e ''activate'' -e ''do script "matlab -nodesktop -nosplash -r \"gyroviz.m\""'' -e ''end tell''')
 
 % Allow communication between scripts (need TCP/UDP/IP Toolbox 2.0.6)
 
