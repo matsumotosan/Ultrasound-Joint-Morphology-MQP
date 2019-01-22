@@ -12,11 +12,12 @@ clc
 
 %% Idea 1: Open another MATLAB instance
 % Evaluate terminal command through MATLAB
-mr = matlabroot;    % location of MATLAB in directo
+mr = matlabroot;            % location of MATLAB in directory
+sr = which('gyroviz.m');    % path to gyroviz.m
 
-% Windows
-eval('!matlab -nodesktop -nosplash -r "gyroviz.m" &')
-
+% Windows - evaluate command in bash
+eval(strcat('!matlab -nodesktop -nosplash -r'," ",sr," ",'&'))
+% eval('!matlab -nodesktop -nosplash -r "gyroviz.m" &')
 
 % MAC
 % Add following to end of .bash_profile
