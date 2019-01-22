@@ -14,8 +14,8 @@ clear; close all; clc
 mr = matlabroot;            % location of MATLAB in directory
 sr = which('gyroviz.m');    % path to gyroviz.m
 
-% Needs Windows OS - evaluate command in bash
-eval(strcat('!matlab -nodesktop -nosplash -r'," ",sr," ",'&'))
+% Windows - evaluate command in bash
+eval(strcat('!matlab -nodesktop -nosplash -r'," ", '"run(', "'", sr, "'",')"'))
 % eval('!matlab -nodesktop -nosplash -r "gyroviz.m" &')
 
 % Allow communication between scripts (need TCP/UDP/IP Toolbox 2.0.6)
