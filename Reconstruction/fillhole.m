@@ -1,8 +1,8 @@
-function vox = fillhole(vox,grid)
+function bin = fillhole(bin)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
-[x,y,z] = size(vox);    % volume size
+[x,y,z] = size(bin);    % volume size
 
 % Repeat for each voxel
 for i = 1:x
@@ -11,14 +11,14 @@ for i = 1:x
             value = 0;
             count = 0;
             
-            if vox(i,j,k) == 0  % voxel is empty
+            if bin(i,j,k) == 0  % voxel is empty
                 value = value + 
                 
             end
         end
         
         % Assign new voxel value
-        vox(i,j,k) = value / counter;
+        bin(i,j,k) = value / counter;
         
     end
 end
