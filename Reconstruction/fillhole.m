@@ -9,6 +9,11 @@ function bin = fillhole(bin,n)
 % Output: bin = bin with PNN hole-filling with averaging
 %
 
+% n must be an odd integer greater than 1
+if ~mod(n,2) || (n <= 1)
+    error('n must be an odd integer greater than one');
+end
+
 sz = size(bin);    % bin dimensions
 
 % Repeat for each voxel
@@ -19,8 +24,8 @@ for i = 1:sz(1)
             count = 0;
             
             if ~bin(i,j,k)  % voxel is empty
-                neigh = findNeighbors(sub2ind(sz,i,j,k),sz,n);
-                for n = neigh
+                neigh = findNeighbors([i,j,k],sz,n);
+                for n = length(neigh)
                     
                 end
             end

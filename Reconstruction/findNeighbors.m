@@ -16,53 +16,47 @@ if ~mod(n,2) || (n <= 1)
 end
 
 
-%% Calculate all index permutations for neighbors
-numNeigh = n ^ 3 - 1;   % number of neighbors
-shift = -floor(n / 2):floor(n / 2); % index shifts
+%% Calculate all index permutations
+shift = -floor(n / 2):floor(n / 2);
+nbi = permn(shift,3);
+nbi(~any(nbi,2),:) = [];
 
-nbi = zeros(numNeigh,n);    % intialize index shift matrix
-di = n;
 
-while di 
-    N = n ^ (di - 1);
-    ni = 1:N;
-    
-    while (ni(end) < numNeigh + 1)
-        for val = shift
-            nbi(ni,di) = val;
-            ni = ni+ N;
-        end
-    end
-    
-    di = di-1;
+%% Calculate indices of neighbors
+% Add shift permutations to center voxel index
+neighbors = index + nbi;
+
+% Remove invalid indices (outside bounding box)
+for i = 1:3
+    neighbors(any(neighbors(:,i) > size(i),2),:) = [];
+    neighbors(any(neighbors(:,i) < 1,2),:) = [];
 end
 
 
-%% Add the input index array to nbi to get all neighbours
-% Set up array for neighbour indices
-nd = length(index);
-Iadj = zeros(nd,numNeigh);
-% kdo = notorig(ones(nd,1), : ); 
-
-for di = 1:ndimA
-    indices = imat( :, di );
-    shifts = nbi( :, di )';
-    neighbindices = indices( :, ones( 1,nneighb)) +shifts( ones(nd, 1), : ) ;
-    maxmat = sizeA( di );
-    
-    % set up mask matrix to keep indices within limits and exclude the original point
-    s = logical( neighbindices <= maxmat );
-    s =logical( neighbindices > 0 ) & s;
-    kdo = kdo & s;
-    % Calculate the linear index
-    if di == 1       
-        Iadj( kdo ) =  neighbindices( kdo );
-    else
-        blocksize = prod( sizeA( 1:(di-1)  ) );
-        m = neighbindices-1;
-        Iadj(kdo )  = Iadj(kdo )+ m(kdo)*blocksize;
-    end
-end
+%% Plot results (comment for speed)
+% Scatter plot of neighbors and center voxel
+% scatter3(neighbors(:,1),neighbors(:,2),neighbors(:,3),'MarkerFaceColor',[0.75 0 .75]); hold on
+% scatter3(index(1),index(2),index(3),'MarkerFaceColor',[0 .75 .75]);
+% 
+% % Plot representative voxels around all points
+% cb = 0.3 * ones(1,3);
+% 
+% % figure; hold on
+% plotcube(cb,index - 0.5 * cb(1),0.5,[1 0 0]); hold on % center voxel
+% for i = 1:length(neighbors) % neighbor voxels
+%     plotcube(cb,neighbors(i,:) - 0.5 * cb(1),0.5,[0 1 0]);
+% end
+% 
+% grid on
+% % legend('Center Voxel','Neighboring Voxels');
+% title('Voxel Neighbor Finding Algorithm');
+% xlabel('X'); ylabel('Y'); zlabel('Z');
+% xlim([min(neighbors(:,1)) - cb(1) * 0.5, max(neighbors(:,1)) + cb(1) * 0.5])
+% xlim([min(neighbors(:,2)) - cb(1) * 0.5, max(neighbors(:,2)) + cb(1) * 0.5])
+% xlim([min(neighbors(:,3)) - cb(1) * 0.5, max(neighbors(:,3)) + cb(1) * 0.5])
+% xticks(min(neighbors(:,1)):max(neighbors(:,1)))
+% yticks(min(neighbors(:,2)):max(neighbors(:,2)))
+% zticks(min(neighbors(:,3)):max(neighbors(:,3)))
 
 end
 

@@ -1,9 +1,9 @@
 % Script to complete 3D reconstruction (pixel nearest neighbor algorithm)
-% of image based on 2D ultrasound scans with pose data obtained by an 
+% of images obtained from 2D ultrasound scans with pose data obtained by an 
 % inertial measurement unit. The overall process is as follows:
 %
 % 0) Enter names of necessary files
-% 1) Calculate probe pose from IMU data
+% 1) Calculate probe pose from IMU data (filtering, numerical integration)
 % 2) US video pre-processing (cropping, pose tagging)
 % 3) Calculate bin dimensions and transform coordinates
 % 4) Reconstruction (distribution step)
@@ -13,7 +13,7 @@
 % Requires following MATLAB Toolboxes:
 %   - Image Processing
 %
-% Check toolboxes needed for this script:
+% Check toolboxes needed for this script if needed:
 % [fList,pList] = matlab.codetools.requiredFilesAndProducts('reconstruct.m');
 
 clear; clc; close all
@@ -39,14 +39,14 @@ imu_data = cell2mat(struct2cell(load(which(imu_file))));
 
 % Calculate displacement from linear acceleration using composite
 % trapezoidal numerical integration scheme
-[disp,~] = calcDisp(acc,t);
+[disp,vel] = calcDisp(acc,t);
 
 
 %% 2) US video pre-processing
 vid_file = '';  % Enter name of US video file
 vid = VideoReader(vid_file);
 
-% Calculate dimension of pixel and cropping window in mm - ????
+% Calculate dimension of pixel and cropping window in mm - ROSIE
 rect = [];      % cropping window
 scale = [];     % mm / pixel
 
@@ -56,19 +56,24 @@ while hasFrame(vid)
     frames{end + 1} = im2double(imcrop(rgb2gray(readFrame(vid)),rect));
 end
 
-% Tag frames with pose data - ????
+% Tag frames with pose data - SHION/ROSIE
 % (Frame tagging function - possibly just interpolate from disp)
 
 
 %% 3) Calculate bin dimensions and transform coordinates
-% Transform IMU pose data to global coordinates - ????
+% Transform IMU pose data to global coordinates - OMEL
 
 
-% Calculate limits of bin - ????
+% Calculate spatial and index limits of bin - OMEL
+
+% Olivia, try using the outputLimits function
+% Calculate output limits for 3D affline transformation
+% [xlim,ylim,zlim] = outputLimits(tform,x,y,z);
 
 
 % Initialze bin for distribution step
-bin = zeros(300,600,100);
+bin = zeros(300,600,100);   % fake numbers
+
 
 %% 4) Reconstruction (distribution step) - SHION
 % Fill voxels - PNN algorithm
@@ -78,14 +83,11 @@ for i = 1:length(frames)
 end
 
 
-%% 5) Reconstruction (hole-filling step)
-bin = fillhole(bin);
+%% 5) Reconstruction (hole-filling step) - SHION
+n = 3;  % grid size
+bin = fillhole(bin,n);
 
 
 %% 6) Visualization
-
-
-
-
 
 
