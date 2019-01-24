@@ -1,25 +1,33 @@
-function bin = fillhole(bin)
-%UNTITLED3 Summary of this function goes here
-%   Detailed explanation goes here
+function bin = fillhole(bin,n)
+%FILLHOLE Pixel nearest neighbor hole-filling with averaging algorithm
+%   Algorithm adapted from "Freehand 3D Ultrasoud Reconstruction Algorithms -
+%   A Review". Authors: Solberg, Lindseth, Torp, et al., 2007
+%
+% Input:  bin = bin after reconstruction
+%           n = n-by-n-by-n search grid for nonzero voxels around empty voxels
+%
+% Output: bin = bin with PNN hole-filling with averaging
+%
 
-[x,y,z] = size(bin);    % volume size
+sz = size(bin);    % bin dimensions
 
 % Repeat for each voxel
-for i = 1:x
-    for j = 1:y
-        for k = 1:z
+for i = 1:sz(1)
+    for j = 1:sz(2)
+        for k = 1:sz(3)
             value = 0;
             count = 0;
             
-            if bin(i,j,k) == 0  % voxel is empty
-                value = value + 
-                
+            if ~bin(i,j,k)  % voxel is empty
+                neigh = findNeighbors(sub2ind(sz,i,j,k),sz,n);
+                for n = neigh
+                    
+                end
             end
         end
         
-        % Assign new voxel value
+        % Assign averaged voxel value
         bin(i,j,k) = value / counter;
-        
     end
 end
 
