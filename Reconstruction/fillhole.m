@@ -9,31 +9,32 @@ function bin = fillhole(bin,n)
 % Output: bin = bin with PNN hole-filling with averaging
 %
 
+
 % n must be an odd integer greater than 1
-if ~mod(n,2) || (n <= 1)
+if ~mod(n,2) || (n <= 1) || ~isnumeric(n)
     error('n must be an odd integer greater than one');
 end
 
-sz = size(bin);    % bin dimensions
+sz = size(bin);              % bin dimensions
+lidx = find(~bin);           % indices of empty voxels
+[I,J,K] = ind2sub(sz,lidx);  % convert to subscript index
 
-% Repeat for each voxel
-for i = 1:sz(1)
-    for j = 1:sz(2)
-        for k = 1:sz(3)
-            value = 0;
-            count = 0;
+% Repeat for each empty voxel
+for i = 1:length(I)
+    value = 0;  % sum of neighboring voxel values
+
+    % linear indices of neighboring voxels
+    neigh = findNeighbors([I(i),J(i),K(i)],sz,n);
             
-            if ~bin(i,j,k)  % voxel is empty
-                neigh = findNeighbors([i,j,k],sz,n);
-                for n = length(neigh)
-                    
-                end
-            end
+    % calculate average of nonzero voxels
+    for j = 1:length(neigh)
+        if bin(neigh(j))
+            value = value + bin(neigh(j));
         end
-        
-        % Assign averaged voxel value
-        bin(i,j,k) = value / counter;
     end
+    
+    % Assign average value or zero to voxel
+    bin(I(i),J(i),K(i)) = value / j;
 end
 
 end

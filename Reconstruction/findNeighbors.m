@@ -4,22 +4,23 @@ function neighbors = findNeighbors(index,size,n)
 %   Extended to find linear indices of neighbor points in an n-by-n-by-n
 %   grid. Remove spatial resolution functionality.
 %
-% Input:  index = subscript index of center voxel
-%          size = bin dimensions
-%             n = grid size surrounding center voxel  
+% Input:      index = subscript index of center voxel
+%              size = bin dimensions
+%                 n = grid size surrounding center voxel  
 %
-% Output:   idx = linear indices of neighboring voxels
+% Output: neighbors = linear indices of neighboring voxels
+
 
 % n must be an odd integer greater than 1
-if ~mod(n,2) || (n <= 1)
+if ~mod(n,2) || (n <= 1) || ~isnumeric(n)
     error('n must be an odd integer greater than one');
 end
 
 
 %% Calculate all index permutations
-shift = -floor(n / 2):floor(n / 2);
-nbi = permn(shift,3);
-nbi(~any(nbi,2),:) = [];
+shift = -floor(n / 2):floor(n / 2); % shifting values
+nbi = permn(shift,3);               % all permutations of shifting values
+nbi(~any(nbi,2),:) = [];            % remove origin
 
 
 %% Calculate indices of neighbors
@@ -31,6 +32,9 @@ for i = 1:3
     neighbors(any(neighbors(:,i) > size(i),2),:) = [];
     neighbors(any(neighbors(:,i) < 1,2),:) = [];
 end
+
+% Convert to linear indices - comment this line when plotting below
+neighbors = sub2ind(size,neighbors(:,1),neighbors(:,2),neighbors(:,3));
 
 
 %% Plot results (comment for speed)
