@@ -63,16 +63,38 @@ end
 %% 3) Calculate bin dimensions and transform coordinates
 % Transform IMU pose data to global coordinates - OMEL
 
+% Initialize IMU relatively close to the knee
+for i = 1:size(frames,2)
+    global_pose = disp .* scale;
+end
 
 % Calculate spatial and index limits of bin - OMEL
+% I'm thinking about whether this should be global -> local or local ->
+% global. I think it would make more sense to go global -> local (mm to px)
+% and then convert to real world measurements after.
 
+[xlim, ylim, zlim] = [0, 0, 0];
+for i = 1:size(pose, 2)
+    [xlim_new, ylim_new, zlim_new] = outputlimits(pose);
+    if xlim_new > xlim
+        xlim = xlim_new;
+    end
+    if ylim_new > ylim
+        ylim = ylim_new;
+    end
+    if zlim_new > zlim
+        zlim = zlim_new;
+    end
+end
+
+    
 % Olivia, try using the outputLimits function
 % Calculate output limits for 3D affline transformation
 % [xlim,ylim,zlim] = outputLimits(tform,x,y,z);
 
 
 % Initialze bin for distribution step
-bin = zeros(300,600,100);   % fake numbers
+bin = zeros(xlim, ylim, zlim);   % fake numbers
 
 
 %% 4) Reconstruction (distribution step) - SHION
