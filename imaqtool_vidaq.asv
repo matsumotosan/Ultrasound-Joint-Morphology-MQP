@@ -24,7 +24,9 @@ start(vid)
 tic
 
 %change frame num
-frame_num = input('How many frames do you want? [#]  '); 
+frame_num = 5; 
+
+x = input(prompt)
 
 for i = 1:frame_num
     

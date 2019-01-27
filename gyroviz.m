@@ -11,8 +11,8 @@ clear; clc; close all
 baudrate = 115200;
 
 %port = '/dev/tty.usbmodem14101'; %for Shion
-%port = 'COM5'; %for Rosie
-port = 'COM6'; %for Olivia
+port = 'COM5'; %for Rosie
+%port = 'COM6'; %for Olivia
 s = serial(port,'BaudRate',baudrate);
 s.ReadAsyncMode = 'manual';
 set(s,'InputBufferSize',100);
@@ -158,14 +158,14 @@ postDisp = calcDisp(acc,t);
 
 % Plot displacement in x,y,z
 figure; hold on
-subplot(1,2,1)  % acceleration plot
+subplot(3,1,1)  % acceleration plot
 plot(t, acc(:,1), t, acc(:,2), t, acc(:,3)); grid on
 title('Acceleration Plot')
 xlabel('Time (s)')
 ylabel('Acceleration (mm/s^2)');
 legend('a_x','a_y','a_z');
 
-subplot(1,2,2)  % displacement plot
+subplot(3,1,2)  % displacement plot
 plot(t, postDisp(1,:)', t, postDisp(2,:)', t, postDisp(3,:)'); grid on
 title('Displacement Plot')
 xlabel('Time (s)')
@@ -179,49 +179,49 @@ xlabel('Time (s)');
 ylabel('Degrees (\circ)');
 legend('Yaw', 'Pitch', 'Roll');
 
-%% Apply filter
-fs = 1 / mean(diff(t));                     % sampling frequency
-% acc_fil = lowpass(acc,1,fs);              % conventional low pass filter
-
-acc_fil = lowpassfilt(acc);
-accel_zero = zeros(1,length(acc_fil));
-
-figure; hold on
-subplot(3,1,1)
-plot(t,acc_fil(:,1),t,acc(:,1),t,accel_zero);
-title('Angular Displacement Yaw (x)')
-xlabel('Time (s)');
-ylabel('Acceleration (mm/s^2)');
-
-subplot(3,1,2)
-plot(t,acc_fil(:,2),t,acc(:,2),t,accel_zero);
-title('Angular Displacement Pitch (y)')
-xlabel('Time (s)');
-ylabel('Acceleration (mm/s^2)');
-
-subplot(3,1,3)
-plot(t,acc_fil(:,3),t,acc(:,3),t,accel_zero);
-title('Angular Displacement Roll (z)')
-xlabel('Time (s)');
-ylabel('Acceleration (mm/s^2)');
-
-%% Calculate displacement with filtered linear acceleration
-disp_fil = calcDisp(acc_fil,t);
-
-% Plot displacement in x,y,z
-figure; hold on
-subplot(2,1,1)  % acceleration plot
-plot(t, acc_fil(:,1), t, acc_fil(:,2), t, acc_fil(:,3)); grid on
-title('Filtered Acceleration Plot')
-xlabel('Time (s)')
-ylabel('Acceleration (mm/s^2)');
-legend('a_x','a_y','a_z');
-
-subplot(2,1,2)  % displacement plot
-plot(t, disp_fil(1,:)', t, disp_fil(2,:)', t, disp_fil(3,:)'); grid on
-title('Filtered Displacement Plot')
-xlabel('Time (s)')
-ylabel('Displacement (mm)');
-legend('d_x','d_y','d_z');
-
-
+% %% Apply filter
+% fs = 1 / mean(diff(t));                     % sampling frequency
+% % acc_fil = lowpass(acc,1,fs);              % conventional low pass filter
+% 
+% acc_fil = lowpassfilt(acc);
+% accel_zero = zeros(1,length(acc_fil));
+% 
+% figure; hold on
+% subplot(3,1,1)
+% plot(t,acc_fil(:,1),t,acc(:,1),t,accel_zero);
+% title('Angular Displacement Yaw (x)')
+% xlabel('Time (s)');
+% ylabel('Acceleration (mm/s^2)');
+% 
+% subplot(3,1,2)
+% plot(t,acc_fil(:,2),t,acc(:,2),t,accel_zero);
+% title('Angular Displacement Pitch (y)')
+% xlabel('Time (s)');
+% ylabel('Acceleration (mm/s^2)');
+% 
+% subplot(3,1,3)
+% plot(t,acc_fil(:,3),t,acc(:,3),t,accel_zero);
+% title('Angular Displacement Roll (z)')
+% xlabel('Time (s)');
+% ylabel('Acceleration (mm/s^2)');
+% 
+% %% Calculate displacement with filtered linear acceleration
+% disp_fil = calcDisp(acc_fil,t);
+% 
+% % Plot displacement in x,y,z
+% figure; hold on
+% subplot(2,1,1)  % acceleration plot
+% plot(t, acc_fil(:,1), t, acc_fil(:,2), t, acc_fil(:,3)); grid on
+% title('Filtered Acceleration Plot')
+% xlabel('Time (s)')
+% ylabel('Acceleration (mm/s^2)');
+% legend('a_x','a_y','a_z');
+% 
+% subplot(2,1,2)  % displacement plot
+% plot(t, disp_fil(1,:)', t, disp_fil(2,:)', t, disp_fil(3,:)'); grid on
+% title('Filtered Displacement Plot')
+% xlabel('Time (s)')
+% ylabel('Displacement (mm)');
+% legend('d_x','d_y','d_z');
+% 
+% 
