@@ -56,9 +56,8 @@ while hasFrame(vid)
     frames{end + 1} = im2double(imcrop(rgb2gray(readFrame(vid)),rect));
 end
 
-% Tag frames with pose data - SHION/ROSIE
-% (Frame tagging function - possibly just interpolate from disp)
-
+% Tag frames with pose data with linear interpolation
+frame_pose = interp1(t,pose(:,2:end),frame_time);
 
 %% 3) Calculate bin dimensions and transform coordinates
 % Transform IMU pose data to global coordinates - OMEL
@@ -73,28 +72,38 @@ end
 % global. I think it would make more sense to go global -> local (mm to px)
 % and then convert to real world measurements after.
 
-[xlim, ylim, zlim] = [0, 0, 0];
-for i = 1:size(pose, 2)
-    [xlim_new, ylim_new, zlim_new] = outputlimits(pose);
-    if xlim_new > xlim
-        xlim = xlim_new;
+% Initialize spatial limits of bin
+bin_lim = ones(1,6);    % [xmin xmax ymin ymax zmin zmax]
+
+for i = 1:length(pose)
+    
+    % 3D affine transformation output limits
+    tform = affine3d();
+    [xlim, ylim, zlim] = outputLimits(tform,[1 bin_lim(2)],[1 bin_lim(4)],[1 bin_lim(6)]);
+    
+    % Update spatial information
+    if xlim(1) < bin_lim(1)
+        bin_lim(1) = xlim(1);
     end
-    if ylim_new > ylim
-        ylim = ylim_new;
+    if xlim(2) > bin_lim(2)
+        bin_lim(2) = xlim(2);
     end
-    if zlim_new > zlim
-        zlim = zlim_new;
+    if ylim(1) < bin_lim(3)
+        bin_lim(3) = ylim(1);
+    end
+    if ylim(2) > bin_lim(4)
+        bin_lim(4) = ylim(2);
+    end
+    if zlim(1) < bin_lim(5)
+        bin_lim(5) = zlim(1);
+    end
+    if zlim(2) > bin_lim(6)
+        bin_lim(6) = zlim(2);
     end
 end
 
-    
-% Olivia, try using the outputLimits function
-% Calculate output limits for 3D affline transformation
-% [xlim,ylim,zlim] = outputLimits(tform,x,y,z);
-
-
 % Initialze bin for distribution step
-bin = zeros(xlim, ylim, zlim);   % fake numbers
+bin = zeros(bin_lim(2), bin_lim(4), bin_lim(6));
 
 
 %% 4) Reconstruction (distribution step) - SHION
