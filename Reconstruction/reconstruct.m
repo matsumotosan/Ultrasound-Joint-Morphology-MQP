@@ -5,6 +5,7 @@
 % 0) Enter names of necessary files
 % 1) Calculate probe pose from IMU data (filtering, numerical integration)
 % 2) US video pre-processing (cropping, pose tagging)
+% 3) Convert Euler angle to frame rotation
 % 3) Calculate bin dimensions and transform coordinates
 % 4) Reconstruction (distribution step)
 % 5) Reconstruction (hole-filling step)
@@ -33,92 +34,81 @@ clear; clc; close all
 imu_file = 'typr.mat';  % Enter name of IMU data file
 imu_data = cell2mat(struct2cell(load(which(imu_file))));
 
-% Filter pose data - low pass filter and moving window
+% Filter orientation data
 % (Filtering function) - ROSIE
 
 
-% Calculate displacement from linear acceleration using composite
-% trapezoidal numerical integration scheme
-[disp,vel] = calcDisp(acc,t);
-
-
 %% 2) US video pre-processing
-vid_file = '';  % Enter name of US video file
+vid_file = 'recon_run1.mp4';  % Enter name of US video file
+addpath(genpath('/Users/Shion/Dropbox/MQP-US Media'))
 vid = VideoReader(vid_file);
 
 % Calculate dimension of pixel and cropping window in mm - ROSIE
-rect = [];      % cropping window
+rect = [29.5 86.5 513 250];      % cropping window
 scale = [];     % mm / pixel
 
 % Convert all frames to grayscale and crop
 frames = {};
+
+% For video files (.avi, .mp4, etc.)
 while hasFrame(vid)
     frames{end + 1} = im2double(imcrop(rgb2gray(readFrame(vid)),rect));
 end
 
 % Tag frames with pose data with linear interpolation
-frame_pose = interp1(t,pose(:,2:end),frame_time);
-
-%% 3) Calculate bin dimensions and transform coordinates
-% Transform IMU pose data to global coordinates - OMEL
-
-% Initialize IMU relatively close to the knee
-for i = 1:size(frames,2)
-    global_pose = disp .* scale;
-end
-
-% Calculate spatial and index limits of bin - OMEL
-% I'm thinking about whether this should be global -> local or local ->
-% global. I think it would make more sense to go global -> local (mm to px)
-% and then convert to real world measurements after.
-
-% Initialize spatial limits of bin
-bin_lim = ones(1,6);    % [xmin xmax ymin ymax zmin zmax]
-
-for i = 1:length(pose)
-    
-    % 3D affine transformation output limits
-    tform = affine3d();
-    [xlim, ylim, zlim] = outputLimits(tform,[1 bin_lim(2)],[1 bin_lim(4)],[1 bin_lim(6)]);
-    
-    % Update spatial information
-    if xlim(1) < bin_lim(1)
-        bin_lim(1) = xlim(1);
-    end
-    if xlim(2) > bin_lim(2)
-        bin_lim(2) = xlim(2);
-    end
-    if ylim(1) < bin_lim(3)
-        bin_lim(3) = ylim(1);
-    end
-    if ylim(2) > bin_lim(4)
-        bin_lim(4) = ylim(2);
-    end
-    if zlim(1) < bin_lim(5)
-        bin_lim(5) = zlim(1);
-    end
-    if zlim(2) > bin_lim(6)
-        bin_lim(6) = zlim(2);
-    end
-end
-
-% Initialze bin for distribution step
-bin = zeros(bin_lim(2), bin_lim(4), bin_lim(6));
+% pose = interp1(t,pose(:,2:end),frame_time);
 
 
-%% 4) Reconstruction (distribution step) - SHION
+%% 4) Reconstruction (distribution step)
 % Fill voxels - PNN algorithm
-for i = 1:length(frames)
-    bin = fillbin(frames{i},pose(i,:),bin);
-    fprintf('(%d/5) frames completed ...\n',i);
-end
+% for i = 1:9
+%     frames{i} = zeros(15,30);
+%     frames{i}(5:10,10:20) = frames{i}(5:10,10:20) + 1;
+% end
+frames = frames(1:10);
+pose = linspace(-60,60,length(frames));
 
+[fH,fW] = size(frames{1});
+bin = zeros(2*fH,fW,2*fH);
 
-%% 5) Reconstruction (hole-filling step) - SHION
-n = 3;  % grid size
-bin = fillhole(bin,n);
+% Fill bin
+bin_ds = fillbin(frames,pose,bin,50,'yaw');
 
+% figure
+% subplot(1,2,1)
+% idx = find(bin_ds);
+% [a,b,c] = ind2sub(size(bin_ds),idx);
+% v = 0.7;
+% isosurface(a,b,c,bin_ds(idx),v);
+% scatter3(a,b,c,20,bin_ds(idx),'filled');
+% colormap(jet)
+% colorbar
+% title('DS')
+
+%% 5a) Reconstruction (hole-filling step)
+n = 9;  % grid size
+bin_hf = fillhole(bin_ds,n);
+
+subplot(1,2,2)
+idx = find(bin_hf);
+[a,b,c] = ind2sub(size(bin_hf),idx);
+scatter3(a,b,c,20,bin_hf(idx),'filled');
+colormap(jet)
+colorbar
+title('HF')
+
+%% 5b) Reconstruction (3d interpolation)
+binSz = size(bin_ds);
+idx = find(bin_ds);
+[x,y,z] = ind2sub(size(bin_ds),idx);
+X = [x,y,z];
+v = bin_ds(idx);
+[xx,yy,zz] = meshgrid(1:30:binSz(1),1:30:binSz(2),1:30:binSz(3));
+xq = [xx(:),yy(:),zz(:)];
+vq = griddatan(X,v,xq,'nearest');
+
+vq = reshape(vq,size(xx));
+slice(xx,yy,zz,vq,[80 160 240],100, 100);
 
 %% 6) Visualization
-
 
