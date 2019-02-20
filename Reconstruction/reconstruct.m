@@ -25,6 +25,7 @@ clear; clc; close all
 % vectorization or create functions to minimize the number of variables
 % needed in the workspace.
 
+
 %% 0) Enter names of necessary files - comment during development
 % imu_file = '';  % raw IMU data
 % vid_file = '';  % raw US data
@@ -52,12 +53,38 @@ frames = {};
 
 % For video files (.avi, .mp4, etc.)
 while hasFrame(vid)
-    frames{end + 1} = im2double(imcrop(rgb2gray(readFrame(vid)),rect));
+%     frames{end + 1} = im2double(imcrop(rgb2gray(readFrame(vid)),rect));
+    frames{end + 1} = imcrop(rgb2gray(readFrame(vid)),rect);
 end
 
 % Tag frames with pose data with linear interpolation
 % pose = interp1(t,pose(:,2:end),frame_time);
 
+
+%% 3) Calculate bin dimensions
+
+% Calculate mm/pixel
+% depth (cm) - cm/pixel (v/h)
+% 1 - 0.008/0.010
+% 2 - 0.008/0.010
+% 3 - 0.008/0.010
+% 4 - 0.011/0.014
+% 5 - 0.014/0.017
+% 6 - 0.017/0.021
+% 7 - 0.019/0.024
+% 8 - 0.022/0.028
+% 9 - 0.025/0.031
+% 10 - 
+% 11 - 
+% 12 - 
+% 13 - 
+% 14 - 
+% 15 - 
+% 16 - 
+
+depth = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+mm_per_pixel = {};
+res = containers.Map(freq,mm_per_pixel);
 
 %% 4) Reconstruction (distribution step)
 % Fill voxels - PNN algorithm
@@ -65,24 +92,30 @@ end
 %     frames{i} = zeros(15,30);
 %     frames{i}(5:10,10:20) = frames{i}(5:10,10:20) + 1;
 % end
-frames = frames(1:10);
-pose = linspace(-60,60,length(frames));
+
+frames = frames(1:3);
+pose = linspace(-45,45,length(frames));
 
 [fH,fW] = size(frames{1});
-bin = zeros(2*fH,fW,2*fH);
+bin = zeros(2*fH,fW,2*fH,'uint8');
 
 % Fill bin
-bin_ds = fillbin(frames,pose,bin,50,'yaw');
+frames{1} = ones(50,30,'uint8');
+for i = 1:8
+    frames{end + 1} = 32 * i * ones(50,30,'uint8');
+end
+
+bin_ds = fillbin(frames,pose,50,1,'yaw',1);
 
 % figure
 % subplot(1,2,1)
-% idx = find(bin_ds);
-% [a,b,c] = ind2sub(size(bin_ds),idx);
+idx = find(bin_ds);
+[a,b,c] = ind2sub(size(bin_ds),idx);
 % v = 0.7;
 % isosurface(a,b,c,bin_ds(idx),v);
-% scatter3(a,b,c,20,bin_ds(idx),'filled');
-% colormap(jet)
-% colorbar
+scatter3(a,b,c,20,bin_ds(idx),'filled');
+colormap(jet)
+colorbar
 % title('DS')
 
 %% 5a) Reconstruction (hole-filling step)
@@ -98,17 +131,19 @@ colorbar
 title('HF')
 
 %% 5b) Reconstruction (3d interpolation)
+tic
 binSz = size(bin_ds);
 idx = find(bin_ds);
 [x,y,z] = ind2sub(size(bin_ds),idx);
 X = [x,y,z];
 v = bin_ds(idx);
-[xx,yy,zz] = meshgrid(1:30:binSz(1),1:30:binSz(2),1:30:binSz(3));
+[xx,yy,zz] = meshgrid(1:10:binSz(1),1:10:binSz(2),1:10:binSz(3));
 xq = [xx(:),yy(:),zz(:)];
 vq = griddatan(X,v,xq,'nearest');
 
 vq = reshape(vq,size(xx));
-slice(xx,yy,zz,vq,[80 160 240],100, 100);
+slice(xx,yy,zz,vq,80:40:240,100, 100);
+toc
 
 %% 6) Visualization
 
