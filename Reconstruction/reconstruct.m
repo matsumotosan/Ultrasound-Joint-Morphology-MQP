@@ -105,7 +105,7 @@ for i = 1:8
     frames{end + 1} = 32 * i * ones(50,30,'uint8');
 end
 
-bin_ds = fillbin(frames,pose,50,1,'yaw',1);
+bin_ds = fillbin(frames,pose,50,1,'fat',1);
 
 % figure
 % subplot(1,2,1)

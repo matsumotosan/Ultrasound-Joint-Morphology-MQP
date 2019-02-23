@@ -14,9 +14,9 @@ function bin = fillbin(frame,pose,r,scale,opt,pad)
 %%
 % [opt,t] = parseinputs(varargin{:});
 
-if strcmp(opt,'yaw')
+if strcmp(opt,'fat')
     axis = [1 0 0];
-elseif strcmp(opt,'pitch')
+elseif strcmp(opt,'thin')
     axis = [0 1 0];
 else
     error('opt must be either yaw or pitch')

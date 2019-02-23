@@ -1,4 +1,4 @@
-function vol = createvol(varargin)
+function [vol,center] = createvol(varargin)
 %CREATEVOLDATA Create 3D matrix to simulate volumetric data
 %
 %   VOL = CREATEVOL(SHAPE) creates a 3-D uint8 matrix in the SHAPE
@@ -21,21 +21,27 @@ function vol = createvol(varargin)
 [D,lim,grad] = parseinputs(varargin{:});
 
 vol = zeros(lim(1),lim(2),lim(3),'uint8');      % initialize volume
-center = round([lim(1), lim(2), lim(3)] / 2);   % shape center
 [X,Y,Z] = ndgrid(1:lim(1), 1:lim(2), 1:lim(3));
 
 switch lower(varargin{1})
     case 'cube'
-        vol(center - D:center + D, center - D:center + D, ...
-            center - D:center + D) = 255;
+        center = round([lim(1) / 2, lim(2) / 2, lim(3) / 2 - D]);   % shape center
+        vol(center(1) - D + 1:center(1) + D, ...
+            center(2) - D + 1:center(2) + D, ...
+            center(3) - D + 1:center(3) + D) = 255;
     case 'cuboid'
-        vol(center - D(1):center + D(1), center - D(2):center + D(2), ...
-        center - D(3):center + D(3)) = 255;
+        center = round([lim(1) / 2, lim(2) / 2, lim(3) / 2 - D(3)]);   % shape center
+        vol(center(1) - D(1) + 1:center(1) + D(1), ...
+            center(2) - D(2) + 1:center(2) + D(2), ...
+            center(3) - D(3) + 1:center(3) + D(3)) = 255;
     case 'sphere'
-        R = sqrt((X - center(1)) .^ 2 + (Y - center(2)) .^ 2 + ...
+        center = round([lim(1) / 2, lim(2) / 2, lim(3) / 2 - D]);   % shape center
+        R = sqrt((X - center(1)) .^ 2 + ...
+            (Y - center(2)) .^ 2 + ...
             (Z - center(3)) .^ 2);
         vol(R <= D) = 255;
     case 'ellipsoid'    % not working yet
+        center = round([lim(1), lim(2), lim(3) / 2 - D(3)]);   % shape center
         R = sqrt(((X - center(1)) / D(1)) .^ 2 + ...
             ((Y - center(2)) / D(2)) .^ 2 + ...
             ((Z - center(3)) / D(3)) .^ 2);
@@ -43,11 +49,15 @@ switch lower(varargin{1})
 end
 
 % Plot data
-figure;
-[X,Y,Z] = ind2sub(size(vol),find(vol));
-scatter3(X,Y,Z,5,'*')
-title(['Simulation Volume Data (',varargin{1},')'])
-axis([0 lim(1) 0 lim(2) 0 lim(3)])
+% figure;
+% idx = find(vol);
+% [X,Y,Z] = ind2sub(size(vol),idx);
+% scatter3(X,Y,Z,5,vol(idx),'o')
+% title(['Simulation Volume Data (',varargin{1},')'])
+% axis([0 lim(1) 0 lim(2) 0 lim(3)])
+% xlabel('X')
+% ylabel('Y')
+% zlabel('Z')
 
 %%
 function [D,LIM,GRADIENT] = parseinputs(varargin)
