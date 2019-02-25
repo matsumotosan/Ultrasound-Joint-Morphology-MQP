@@ -10,6 +10,13 @@ function bin = fillbin_thick(frame,pose,r,pad)
 %
 %   BIN = FILLBIN(___,METHOD)
 %
+
+if mod(size(frame{1},2),2) == 0
+    for i = 1:length(frame)
+        frame{i} = padarray(frame{i},1,0,'pre');
+    end
+end
+
 axis = [1 0 0];
 [dims,def] = init_bin(frame{1},pose,r,pad);     % calculate bin size
 bin = zeros(dims(1),dims(2),dims(3),'double');  % initialize bin
@@ -20,33 +27,29 @@ for i = 1:length(frame)
     vox2add = zeros(dims(1),dims(2),dims(3),'double');
     
     % Add frame
-    vox2add(def{1},def{2},def{3}) = squeeze(vox2add(def{1},def{2},def{3})) + frame{i}';
+    vox2add(def{1},def{2},def{3}) = squeeze(vox2add(def{1},def{2},def{3})) + flip(frame{i},1)';
     
-%     figure; hold on
-%     [x,y,z] = ind2sub(size(vox2add),find(vox2add));
-%     scatter3(x,y,z,5,'filled')
-    
-    % Rotate frame
+    figure; hold on
+    [x,y,z] = ind2sub(size(vox2add),find(vox2add));
+    scatter3(x,y,z,5,'filled')
+
+    % Rotate frame at center
     vox2add = imrotate3(vox2add,pose(i),axis,'nearest','crop');
 
-%     [x,y,z] = ind2sub(size(vox2add),find(vox2add));
-%     scatter3(x,y,z,5,'filled')
+    [x,y,z] = ind2sub(size(vox2add),find(vox2add));
+    scatter3(x,y,z,5,'filled')
     
     % Translate frame
-    dx = r * sind(abs(pose(i)));
-    dz = r * (1 - cosd(abs(pose(i))));
+    dx = r * sind(pose(i));
+    dz = r * (1 - cosd(pose(i)));
     
-    if pose(i) < 0
-        vox2add = imtranslate(vox2add, [0 dx -dz],'nearest');
-    elseif pose(i) > 0
-        vox2add = imtranslate(vox2add, [0 -dx -dz],'nearest');
-    end
+    vox2add = imtranslate(vox2add, [0 dx dz],'nearest');
      
-%     [x,y,z] = ind2sub(size(vox2add),find(vox2add));
-%     scatter3(x,y,z,5,'filled')
-%     title(['Frame ', num2str(i), ' Transformation Process'])
-%     xlabel('x'); ylabel('y'); zlabel('z');
-%     legend('Default','Rotated','Translated')
+    [x,y,z] = ind2sub(size(vox2add),find(vox2add));
+    scatter3(x,y,z,5,'filled')
+    title(['Frame ', num2str(i), ' Transformation Process'])
+    xlabel('x'); ylabel('y'); zlabel('z');
+    legend('Default','Rotated','Translated')
     
     % Add to bin
     bin = bin + vox2add;
@@ -71,7 +74,7 @@ function [dims,def] = init_bin(frame,pose,r,pad)
 
     % Indices for slice insertion in placeholder bin
     def = {round(rows / 2) - pad:round(rows / 2) + pad, 1:fw, ...
-        height - fh + 1:height};
+        round(height / 2) - (fh - 1) / 2:round(height / 2) + (fh - 1) / 2};
 end
 
 end

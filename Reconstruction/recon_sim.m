@@ -25,7 +25,7 @@ volY_re = reshape(volY,50,50,50);
 volZ_re = reshape(volZ,50,50,50);
 
 % Slice location/position info
-noSlices = 5;
+noSlices = 9;
 angles = linspace(-45, 45, noSlices);
 r = 20;
 pose = {};
@@ -96,7 +96,7 @@ view(3)
 % Plot reconstructed volume
 bin = fillbin_thick(frame,angles,r,0);
 
-subplot(1,2,2)
+figure; hold on
 [x,y,z] = ind2sub(size(bin),find(bin));
 scatter3(x,y,z,5,'filled')
 title('Reconstruction of simulated frames')
@@ -112,10 +112,19 @@ view(3)
 box = zeros(51,51);
 sq1 = ones(10,10);
 sq1_center = [26,26];
+noSlices = 9;
+angles = linspace(-90, 90, noSlices);
 
+frames = {};
+for i = 1:noSlices
+    frames{i} = 255 * ones(50);
+end
 
-bin_thin = fillbin_thin(frames,angle,50,'nearest');
-
+% figure;
+% bin_thin = fillbin_thin(frames,angle,100,'nearest');
+% imshow(uint8(bin_thin))
+% colormap jet
+% colorbar
 
 %% Sutherland-Hodgman Algorithm
 % define the 6 planes of a box

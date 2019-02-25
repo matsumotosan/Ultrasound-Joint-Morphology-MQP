@@ -120,11 +120,9 @@ colorbar
 
 %% Reconstruction - thin side
 noFrames = 3;
-angle = linspace(15,-15,noFrames);
-% angle = 75;
-frames = frames(1:noFrames);
+angle = linspace(-15,15,noFrames);
 
-bin_thin = fillbin_thin(frames,angle,50,1,'nearest');
+bin_thin = fillbin_thin(frames(1:noFrames),angle,300,'nearest');
 
 
 
