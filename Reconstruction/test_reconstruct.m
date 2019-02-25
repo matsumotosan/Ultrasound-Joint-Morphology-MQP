@@ -58,20 +58,24 @@ cube(25:75,25:75,25:75) = cube(25:75,25:75,25:75) + 1;
 
 
 %% Distribution step
-filledBin = zeros(300,600,100);
-pose = [10000 10 0 0 0 0 0;
-    10000 11 0 0 0 0 0;
-    10000 12 0 0 0 0 0;
-    10000 13 0 0 0 0 0;
-    10000 14 0 0 0 0 0];
-
-tic
+clear frames
 for i = 1:5
+    frames{i} = rand(20,20);
+end
+
+filledBin = zeros(300,300,300);
+pose = [10000 0 0 0 0 0 0;
+    10000 0 0 0 0 0 0;
+    10000 0 0 0 0 0 0;
+    10000 0 0 0 0 0 0;
+    10000 0 0 0 0 0 0];
+
+%tic
+for i = 1:4
     filledBin = fillbin(frames{i}, pose(i,:), filledBin);
     fprintf('(%d/5) frames completed ...\n',i);
 end
-legend('1','2','3','4','5')
-toc
+%toc
 
 % idx = find(filledBin);
 % [a,b,c] = ind2sub(size(filledBin),idx);

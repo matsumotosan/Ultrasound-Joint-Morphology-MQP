@@ -34,7 +34,7 @@ for i = 1:3
 end
 
 % Convert to linear indices - comment this line when plotting below
-neighbors = sub2ind(size,neighbors(:,1),neighbors(:,2),neighbors(:,3));
+% neighbors = sub2ind(size,neighbors(:,1),neighbors(:,2),neighbors(:,3));
 
 
 %% Plot results (comment for speed)
@@ -53,7 +53,7 @@ neighbors = sub2ind(size,neighbors(:,1),neighbors(:,2),neighbors(:,3));
 % 
 % grid on
 % % legend('Center Voxel','Neighboring Voxels');
-% title('Voxel Neighbor Finding Algorithm');
+% title(strcat('Voxel Neighbor Finding Algorithm (n=',num2str(n),')'));
 % xlabel('X'); ylabel('Y'); zlabel('Z');
 % xlim([min(neighbors(:,1)) - cb(1) * 0.5, max(neighbors(:,1)) + cb(1) * 0.5])
 % xlim([min(neighbors(:,2)) - cb(1) * 0.5, max(neighbors(:,2)) + cb(1) * 0.5])

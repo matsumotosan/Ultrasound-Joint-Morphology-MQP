@@ -5,6 +5,7 @@
 % 0) Enter names of necessary files
 % 1) Calculate probe pose from IMU data (filtering, numerical integration)
 % 2) US video pre-processing (cropping, pose tagging)
+% 3) Convert Euler angle to frame rotation
 % 3) Calculate bin dimensions and transform coordinates
 % 4) Reconstruction (distribution step)
 % 5) Reconstruction (hole-filling step)
@@ -24,6 +25,7 @@ clear; clc; close all
 % vectorization or create functions to minimize the number of variables
 % needed in the workspace.
 
+
 %% 0) Enter names of necessary files - comment during development
 % imu_file = '';  % raw IMU data
 % vid_file = '';  % raw US data
@@ -33,83 +35,125 @@ clear; clc; close all
 imu_file = 'typr.mat';  % Enter name of IMU data file
 imu_data = cell2mat(struct2cell(load(which(imu_file))));
 
-% Filter pose data - low pass filter and moving window
+% Filter orientation data
 % (Filtering function) - ROSIE
 
 
-% Calculate displacement from linear acceleration using composite
-% trapezoidal numerical integration scheme
-[disp,vel] = calcDisp(acc,t);
-
-
 %% 2) US video pre-processing
-vid_file = '';  % Enter name of US video file
+vid_file = 'recon_run1.mp4';  % Enter name of US video file
+addpath(genpath('/Users/Shion/Dropbox/MQP-US Media'))
 vid = VideoReader(vid_file);
 
 % Calculate dimension of pixel and cropping window in mm - ROSIE
-rect = [];      % cropping window
+rect = [29.5 86.5 513 250];      % cropping window
 scale = [];     % mm / pixel
 
 % Convert all frames to grayscale and crop
 frames = {};
+
+% For video files (.avi, .mp4, etc.)
 while hasFrame(vid)
-    frames{end + 1} = im2double(imcrop(rgb2gray(readFrame(vid)),rect));
+%     frames{end + 1} = im2double(imcrop(rgb2gray(readFrame(vid)),rect));
+    frames{end + 1} = double(imcrop(rgb2gray(readFrame(vid)),rect));
 end
 
-% Tag frames with pose data - SHION/ROSIE
-% (Frame tagging function - possibly just interpolate from disp)
+% Tag frames with pose data with linear interpolation
+% pose = interp1(t,pose(:,2:end),frame_time);
 
 
-%% 3) Calculate bin dimensions and transform coordinates
-% Transform IMU pose data to global coordinates - OMEL
+%% 3) Calculate bin dimensions
 
-% Initialize IMU relatively close to the knee
-for i = 1:size(frames,2)
-    global_pose = disp .* scale;
-end
+% Calculate mm/pixel
+% depth (cm) - cm/pixel (v/h)
+% 1 - 0.008/0.010
+% 2 - 0.008/0.010
+% 3 - 0.008/0.010
+% 4 - 0.011/0.014
+% 5 - 0.014/0.017
+% 6 - 0.017/0.021
+% 7 - 0.019/0.024
+% 8 - 0.022/0.028
+% 9 - 0.025/0.031
+% 10 - 
+% 11 - 
+% 12 - 
+% 13 - 
+% 14 - 
+% 15 - 
+% 16 - 
 
-% Calculate spatial and index limits of bin - OMEL
-% I'm thinking about whether this should be global -> local or local ->
-% global. I think it would make more sense to go global -> local (mm to px)
-% and then convert to real world measurements after.
+depth = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+mm_per_pixel = {};
+res = containers.Map(freq,mm_per_pixel);
 
-[xlim, ylim, zlim] = [0, 0, 0];
-for i = 1:size(pose, 2)
-    [xlim_new, ylim_new, zlim_new] = outputlimits(pose);
-    if xlim_new > xlim
-        xlim = xlim_new;
-    end
-    if ylim_new > ylim
-        ylim = ylim_new;
-    end
-    if zlim_new > zlim
-        zlim = zlim_new;
-    end
-end
-
-    
-% Olivia, try using the outputLimits function
-% Calculate output limits for 3D affline transformation
-% [xlim,ylim,zlim] = outputLimits(tform,x,y,z);
-
-
-% Initialze bin for distribution step
-bin = zeros(xlim, ylim, zlim);   % fake numbers
-
-
-%% 4) Reconstruction (distribution step) - SHION
+%% 4a) Reconstruction (distribution step) - fat side
 % Fill voxels - PNN algorithm
-for i = 1:length(frames)
-    bin = fillbin(frames{i},pose(i,:),bin);
-    fprintf('(%d/5) frames completed ...\n',i);
+% for i = 1:9
+%     frames{i} = zeros(15,30);
+%     frames{i}(5:10,10:20) = frames{i}(5:10,10:20) + 1;
+% end
+
+frames = frames(1:3);
+pose = linspace(-45,45,length(frames));
+
+[fH,fW] = size(frames{1});
+bin = zeros(2*fH,fW,2*fH,'uint8');
+
+% Fill bin
+frames{1} = ones(50,30,'uint8');
+for i = 1:8
+    frames{end + 1} = 32 * i * ones(50,30,'uint8');
 end
 
+bin_ds = fillbin_thick(frames,pose,50,1,1);
 
-%% 5) Reconstruction (hole-filling step) - SHION
-n = 3;  % grid size
-bin = fillhole(bin,n);
+% figure
+% subplot(1,2,1)
+idx = find(bin_ds);
+[a,b,c] = ind2sub(size(bin_ds),idx);
+% v = 0.7;
+% isosurface(a,b,c,bin_ds(idx),v);
+scatter3(a,b,c,20,bin_ds(idx),'filled');
+colormap(jet)
+colorbar
+% title('DS')
 
+%% Reconstruction - thin side
+noFrames = 3;
+angle = linspace(15,-15,noFrames);
+% angle = 75;
+frames = frames(1:noFrames);
+
+bin_thin = fillbin_thin(frames,angle,50,1,'nearest');
+
+
+
+%% 5a) Reconstruction (hole-filling step)
+n = 9;  % grid size
+bin_hf = fillhole(bin_ds,n);
+
+subplot(1,2,2)
+idx = find(bin_hf);
+[a,b,c] = ind2sub(size(bin_hf),idx);
+scatter3(a,b,c,20,bin_hf(idx),'filled');
+colormap(jet)
+colorbar
+title('HF')
+
+%% 5b) Reconstruction (3d interpolation)
+tic
+binSz = size(bin_ds);
+idx = find(bin_ds);
+[x,y,z] = ind2sub(size(bin_ds),idx);
+X = [x,y,z];
+v = bin_ds(idx);
+[xx,yy,zz] = meshgrid(1:10:binSz(1),1:10:binSz(2),1:10:binSz(3));
+xq = [xx(:),yy(:),zz(:)];
+vq = griddatan(X,v,xq,'nearest');
+
+vq = reshape(vq,size(xx));
+slice(xx,yy,zz,vq,80:40:240,100, 100);
+toc
 
 %% 6) Visualization
-
 
