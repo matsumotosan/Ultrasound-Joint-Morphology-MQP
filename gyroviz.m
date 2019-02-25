@@ -8,11 +8,11 @@ clear; clc; close all
 
 %% Create serial object for Arduino
 % Change the COM Port number as needed
-baudrate = 115200;
+baudrate = 115200; %74880;%9600;
 
 %port = '/dev/tty.usbmodem14101'; %for Shion
-%port = 'COM5'; %for Rosie
-port = 'COM6'; %for Olivia
+port = 'COM5'; %for Rosie
+%port = 'COM6'; %for Olivia
 s = serial(port,'BaudRate',baudrate);
 s.ReadAsyncMode = 'manual';
 set(s,'InputBufferSize',100);
@@ -50,7 +50,7 @@ t = 0;
 T(i) = 0;
 FLAG_CASTING = false;
 CubH = [];
-yprxyz = zeros(1,7);
+ypr = zeros(1,4);
 Flag_Initializing = true;
 
 % Setup
@@ -63,7 +63,7 @@ while(Flag_Initializing)
     readasync(s);
     sms = fscanf(s);
     
-    if ~strcmp(sms(1:6),'yprxyz')
+    if ~strcmp(sms(1:3),'ypr')
         fprintf(sms)
     else
         Flag_Initializing = false;
@@ -71,12 +71,12 @@ while(Flag_Initializing)
 end
 
 % Initialize displacement and velocity matrix [x y z]
-disp = [0 0 0];
-vel = [0 0 0];
-pose = zeros(1,7);
+% disp = [0 0 0];
+% vel = [0 0 0];
+pose = zeros(1,4);
 
 % Initialize figure to plot
-figure(1); hold on
+%figure(1); hold on
 
 % Collect measurements
 % tic % start timer here
@@ -89,10 +89,10 @@ while ~STABLE
     
     if ~isempty(idx)
         idx = idx(end) + 1;
-        yprxyz = sscanf(sms(idx:end),'%f %f %f %f %f %f %f',[1 7]);
+        ypr = sscanf(sms(idx:end),'%f %f %f %f',[1 4]);
     end
     
-    if all(abs(yprxyz(5:7)) < 15)
+    if all(abs(ypr(2:4)) < 10)
         STABLE = true;
     end
 end
@@ -102,45 +102,44 @@ while T(end) <= 3000
     T(end+1)=T(end)+1;
     sms='a';
     idx = [];
-    yprxyz = [0];
+    ypr = [0];
     
-    while isempty(idx) || numel(yprxyz)~=7
+    while isempty(idx) || numel(ypr)~=4
         sms = fscanf(s);
-        idx = find(sms=='z');
+        idx = find(sms=='r');
         if ~isempty(idx)
             idx = idx(end) + 1;
-            yprxyz = sscanf(sms(idx:end),'%f %f %f %f %f %f %f', [1 7]);
+            ypr = sscanf(sms(idx:end),'%f %f %f %f', [1 4]);
 %             t = toc;
         end
     end
     
     % Append to matrix containing pose information
-%     pose = [pose; [t, yprxyz]];
-    pose = [pose; yprxyz];
+%     pose = [pose; [t, ypr]];
+    pose = [pose; ypr];
 
     % Update velocity and displacement - comment for speed (can calculate
     % displacement post-imaging based on acceleration data)
-    dt = pose(end,1) - pose(end-1,1);
-    vel = vel + dt * pose(end,5:7);         % current velocity
-    disp = [disp; dt * vel + disp(end,:)];  % current displacement
+%     dt = pose(end,1) - pose(end-1,1);
+%     vel = vel + dt * pose(end,5:7);         % current velocity
+%     disp = [disp; dt * vel + disp(end,:)];  % current displacement
 
     % Plot
 %     plot(t,pose(end,5), t,pose(end,6), t,pose(end,7));
-    fprintf('%7d %8.4f %8.4f %8.4f %5d %5d %5d\n', pose(end,1), pose(end,2), pose(end,3), pose(end,4), ...
-        pose(end,5), pose(end,6), pose(end,7));
+    fprintf('%7d %8.4f %8.4f %8.4f\n', pose(end,1), pose(end,2), pose(end,3), pose(end,4));
 %     
 %     % Update plot (comment for faster sampling rate)
 %     k = 1;
 %     vY = get(H(k),'YData');vX = get(H(k),'XData');
-%     set(H(k),'YData',[vY,yprxyz(k)]);set(H(k),'XData',[vX,T(end)]);
+%     set(H(k),'YData',[vY,ypr(k)]);set(H(k),'XData',[vX,T(end)]);
 % 
 %     k = 2;
 %     vY = get(H(k),'YData');vX = get(H(k),'XData');
-%     set(H(k),'YData',[vY,yprxyz(k)]);set(H(k),'XData',[vX,T(end)]);
+%     set(H(k),'YData',[vY,ypr(k)]);set(H(k),'XData',[vX,T(end)]);
 % 
 %     k = 3;
 %     vY = get(H(k),'YData');vX = get(H(k),'XData');
-%     set(H(k),'YData',[vY,yprxyz(k)]);set(H(k),'XData',[vX,T(end)]);
+%     set(H(k),'YData',[vY,ypr(k)]);set(H(k),'XData',[vX,T(end)]);
 % 
 %     CubH = Plot_Cube(deg2rad(-Yaw),deg2rad(Pitch),deg2rad(Roll),Ax(2),CubH);
 %     drawnow;
@@ -148,80 +147,80 @@ end
 
 fclose(s);
 
-%% Calculate displacement (x,y,z)
-% Nested for double integration
-acc = pose(2:end,5:7);
-ypr = pose(2:end,2:4)';
-t = pose(2:end,1)/1000;
-
-postDisp = calcDisp(acc,t);
-
-% Plot displacement in x,y,z
-figure; hold on
-subplot(1,2,1)  % acceleration plot
-plot(t, acc(:,1), t, acc(:,2), t, acc(:,3)); grid on
-title('Acceleration Plot')
-xlabel('Time (s)')
-ylabel('Acceleration (mm/s^2)');
-legend('a_x','a_y','a_z');
-
-subplot(1,2,2)  % displacement plot
-plot(t, postDisp(1,:)', t, postDisp(2,:)', t, postDisp(3,:)'); grid on
-title('Displacement Plot')
-xlabel('Time (s)')
-ylabel('Displacement (mm)');
-legend('d_x','d_y','d_z');
-
-subplot(3,1,3)  % angular displacement plot
-plot(t, ypr(1,:), t, ypr(2,:), t, ypr(3,:)); grid on
-title('Angular Displacement Plot')
-xlabel('Time (s)');
-ylabel('Degrees (\circ)');
-legend('Yaw', 'Pitch', 'Roll');
-
-%% Apply filter
-fs = 1 / mean(diff(t));                     % sampling frequency
-% acc_fil = lowpass(acc,1,fs);              % conventional low pass filter
-
-acc_fil = lowpassfilt(acc);
-accel_zero = zeros(1,length(acc_fil));
-
-figure; hold on
-subplot(3,1,1)
-plot(t,acc_fil(:,1),t,acc(:,1),t,accel_zero);
-title('Angular Displacement Yaw (x)')
-xlabel('Time (s)');
-ylabel('Acceleration (mm/s^2)');
-
-subplot(3,1,2)
-plot(t,acc_fil(:,2),t,acc(:,2),t,accel_zero);
-title('Angular Displacement Pitch (y)')
-xlabel('Time (s)');
-ylabel('Acceleration (mm/s^2)');
-
-subplot(3,1,3)
-plot(t,acc_fil(:,3),t,acc(:,3),t,accel_zero);
-title('Angular Displacement Roll (z)')
-xlabel('Time (s)');
-ylabel('Acceleration (mm/s^2)');
-
-%% Calculate displacement with filtered linear acceleration
-disp_fil = calcDisp(acc_fil,t);
-
-% Plot displacement in x,y,z
-figure; hold on
-subplot(2,1,1)  % acceleration plot
-plot(t, acc_fil(:,1), t, acc_fil(:,2), t, acc_fil(:,3)); grid on
-title('Filtered Acceleration Plot')
-xlabel('Time (s)')
-ylabel('Acceleration (mm/s^2)');
-legend('a_x','a_y','a_z');
-
-subplot(2,1,2)  % displacement plot
-plot(t, disp_fil(1,:)', t, disp_fil(2,:)', t, disp_fil(3,:)'); grid on
-title('Filtered Displacement Plot')
-xlabel('Time (s)')
-ylabel('Displacement (mm)');
-legend('d_x','d_y','d_z');
-
-
+% %% Calculate displacement (x,y,z)
+% % Nested for double integration
+% acc = pose(2:end,5:7);
+% ypr = pose(2:end,2:4)';
+% t = pose(2:end,1)/1000;
+% 
+% postDisp = calcDisp(acc,t);
+% 
+% % Plot displacement in x,y,z
+% figure; hold on
+% subplot(3,1,1)  % acceleration plot
+% plot(t, acc(:,1), t, acc(:,2), t, acc(:,3)); grid on
+% title('Acceleration Plot')
+% xlabel('Time (s)')
+% ylabel('Acceleration (mm/s^2)');
+% legend('a_x','a_y','a_z');
+% 
+% subplot(3,1,2)  % displacement plot
+% plot(t, postDisp(1,:)', t, postDisp(2,:)', t, postDisp(3,:)'); grid on
+% title('Displacement Plot')
+% xlabel('Time (s)')
+% ylabel('Displacement (mm)');
+% legend('d_x','d_y','d_z');
+% 
+% subplot(3,1,3)  % angular displacement plot
+% plot(t, ypr(1,:), t, ypr(2,:), t, ypr(3,:)); grid on
+% title('Angular Displacement Plot')
+% xlabel('Time (s)');
+% ylabel('Degrees (\circ)');
+% legend('Yaw', 'Pitch', 'Roll');
+% 
+% % %% Apply filter
+% % fs = 1 / mean(diff(t));                     % sampling frequency
+% % % acc_fil = lowpass(acc,1,fs);              % conventional low pass filter
+% % 
+% % acc_fil = lowpassfilt(acc);
+% % accel_zero = zeros(1,length(acc_fil));
+% % 
+% % figure; hold on
+% % subplot(3,1,1)
+% % plot(t,acc_fil(:,1),t,acc(:,1),t,accel_zero);
+% % title('Angular Displacement Yaw (x)')
+% % xlabel('Time (s)');
+% % ylabel('Acceleration (mm/s^2)');
+% % 
+% % subplot(3,1,2)
+% % plot(t,acc_fil(:,2),t,acc(:,2),t,accel_zero);
+% % title('Angular Displacement Pitch (y)')
+% % xlabel('Time (s)');
+% % ylabel('Acceleration (mm/s^2)');
+% % 
+% % subplot(3,1,3)
+% % plot(t,acc_fil(:,3),t,acc(:,3),t,accel_zero);
+% % title('Angular Displacement Roll (z)')
+% % xlabel('Time (s)');
+% % ylabel('Acceleration (mm/s^2)');
+% % 
+% % %% Calculate displacement with filtered linear acceleration
+% % disp_fil = calcDisp(acc_fil,t);
+% % 
+% % % Plot displacement in x,y,z
+% % figure; hold on
+% % subplot(2,1,1)  % acceleration plot
+% % plot(t, acc_fil(:,1), t, acc_fil(:,2), t, acc_fil(:,3)); grid on
+% % title('Filtered Acceleration Plot')
+% % xlabel('Time (s)')
+% % ylabel('Acceleration (mm/s^2)');
+% % legend('a_x','a_y','a_z');
+% % 
+% % subplot(2,1,2)  % displacement plot
+% % plot(t, disp_fil(1,:)', t, disp_fil(2,:)', t, disp_fil(3,:)'); grid on
+% % title('Filtered Displacement Plot')
+% % xlabel('Time (s)')
+% % ylabel('Displacement (mm)');
+% % legend('d_x','d_y','d_z');
+% % 
+% % 

@@ -10,7 +10,7 @@ if exist('vid')
 end
 
 %% Acquire images
-% acquire Device Info for line 9
+% acquire Device Info for line 17
 % info = imaqhwinfo('winvideo');
 % ID = info.DeviceInfo(1).DefaultFormat;
 
@@ -21,8 +21,12 @@ triggerconfig(vid, 'Manual');
 
 %% Gather Frames
 start(vid)
+
+%change frame num
+frame_num = input('How many frames do you want? [#]  '); 
+
 tic
-for i = 1:4000
+for i = 1:frame_num
     
     frames{i} = getsnapshot(vid);
     t(i) = toc;
@@ -32,6 +36,7 @@ for i = 1:4000
     %         fprintf('Start time of data acquistion: %s \n', datestr(now,'mm-dd-yyyy MM.SS.FFF'));
     %     end
 end
+
 
 %% Close Video
 stop(vid)
