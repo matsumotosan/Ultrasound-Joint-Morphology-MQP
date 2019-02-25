@@ -31,6 +31,26 @@ eval(strcat('!matlab -nodesktop -nosplash -r'," ", '"run(', "'", sr, "'",')"'))
 %     
 % end
 
+if exist('vid')
+    stop(vid);
+end
+
+% Acquire images
+vid = videoinput('winvideo',1,'UYVY_720x480');
+preview(vid);
+
+triggerconfig(vid, 'Manual');
+
+delete(gcp('nocreate'))
+parpool(2)
+parfor idx = 1:2
+    if idx == 1
+        test1();          %IMU data acquisition
+    elseif idx == 2
+        test2();   %image acquisition from ultrasound
+    end
+end
+
 %% Acquire images
 % Acquire Device Info for line 9
 % info = imaqhwinfo('winvideo');

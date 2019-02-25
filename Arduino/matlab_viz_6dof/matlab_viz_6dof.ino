@@ -79,7 +79,15 @@ void setup()
   // initialize serial communication
   // (115200 chosen because it is required for Teapot Demo output, but it's
   // really up to you depending on your project)
+  
+  
+  
+  
+  
+  
   Serial.begin(115200);
+
+  
   //Serial.begin(1200);
   while (!Serial); // wait for Leonardo enumeration, others continue immediately
 
@@ -109,14 +117,14 @@ void setup()
 
   // supply your own gyro offsets here, scaled for min sensitivity
 
-    mpu.setXAccelOffset(-1816);
-    mpu.setYAccelOffset(-3518);
-    mpu.setZAccelOffset(1000);
-    mpu.setXGyroOffset(108);
+    mpu.setXAccelOffset(-1936);
+    mpu.setYAccelOffset(-3562);
+    mpu.setZAccelOffset(935);
+    mpu.setXGyroOffset(107);
     mpu.setYGyroOffset(39);
     mpu.setZGyroOffset(-15);
-    
-  
+
+
   // make sure it worked (returns 0 if so)
   
   if (devStatus == 0) 
@@ -210,20 +218,21 @@ void loop()
     mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
     
     if (stable) {
-      Serial.print("yprxyz\t");
+      Serial.print("ypr\t");
       Serial.print(millis());
       Serial.print("\t");
       Serial.print(ypr[0] * 180 / M_PI);
       Serial.print("\t");
       Serial.print(ypr[1] * 180 / M_PI);
       Serial.print("\t");
-      Serial.print(ypr[2] * 180 / M_PI);
-      Serial.print("\t");
-      Serial.print(aaWorld.x);
-      Serial.print("\t");
-      Serial.print(aaWorld.y);
-      Serial.print("\t");
-      Serial.println(aaWorld.z);
+      Serial.println(ypr[2] * 180 / M_PI);
+      
+//      Serial.print("\t");
+//      Serial.print(aaWorld.x);
+//      Serial.print("\t");
+//      Serial.print(aaWorld.y);
+//      Serial.print("\t");
+//      Serial.println(aaWorld.z);
     }
 #endif
 

@@ -1,26 +1,40 @@
-function vox = fillhole(vox,grid)
-%UNTITLED3 Summary of this function goes here
-%   Detailed explanation goes here
+function bin = fillhole(bin,n)
+%FILLHOLE Pixel nearest neighbor hole-filling with averaging algorithm
+%   Algorithm adapted from "Freehand 3D Ultrasoud Reconstruction Algorithms -
+%   A Review". Authors: Solberg, Lindseth, Torp, et al., 2007
+%
+% Input:  bin = bin after reconstruction
+%           n = n-by-n-by-n search grid for nonzero voxels around empty voxels
+%
+% Output: bin = bin with PNN hole-filling with averaging
+%
 
-[x,y,z] = size(vox);    % volume size
 
-% Repeat for each voxel
-for i = 1:x
-    for j = 1:y
-        for k = 1:z
-            value = 0;
-            count = 0;
+% n must be an odd integer greater than 1
+if ~mod(n,2) || (n <= 1) || ~isnumeric(n)
+    error('n must be an odd integer greater than one');
+end
+
+sz = size(bin);              % bin dimensions
+lidx = find(~bin);           % indices of empty voxels
+[I,J,K] = ind2sub(sz,lidx);  % convert to subscript index
+
+% Repeat for each empty voxel
+for i = 1:length(I)
+    value = 0;  % sum of neighboring voxel values
+
+    % linear indices of neighboring voxels
+    neigh = findNeighbors([I(i),J(i),K(i)],sz,n);
             
-            if vox(i,j,k) == 0  % voxel is empty
-                value = value + 
-                
-            end
+    % calculate average of nonzero voxels
+    for j = 1:length(neigh)
+        if bin(neigh(j))
+            value = value + bin(neigh(j));
         end
-        
-        % Assign new voxel value
-        vox(i,j,k) = value / counter;
-        
     end
+    
+    % Assign average value or zero to voxel
+    bin(I(i),J(i),K(i)) = value / j;
 end
 
 end

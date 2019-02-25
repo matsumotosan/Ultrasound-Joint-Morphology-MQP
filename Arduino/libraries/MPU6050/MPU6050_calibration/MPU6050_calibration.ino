@@ -38,6 +38,7 @@ void setup()
   // join I2C bus (I2Cdev library doesn't do this automatically)
   Wire.begin();
   // COMMENT NEXT LINE IF YOU ARE USING ARDUINO DUE
+  
   TWBR = 24; // 400kHz I2C clock (200kHz if CPU is 8MHz). Leonardo measured 250kHz.
 
   // initialize serial communication

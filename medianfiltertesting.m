@@ -2,19 +2,20 @@
 
 close all; clear all; clc;
 
-%% Load relevant pose files & extract data
-%load('do_nothing.mat'); %newest no movement file
+%% Load relevant pose files
+load('do_nothing.mat'); %newest no movement file
 %load('square_test.mat'); %start and end points are same, square trial
-load('line_test.mat'); %line test
+%load('line_test.mat'); %line test
 %load('new_signal.mat'); %no movement file
 %load('disp_trial.mat'); %had weird data
 
-%% Calculate displacement (x,y,z)
+%% Extract Acc, Gyr, Time
 % Nested for double integration
 acc = pose(2:end,5:7);      %extract acceleration data
 ypr = pose(2:end,2:4)';     %extract gyro data
 t = pose(2:end,1)/1000;     %extract time data & convert to ms
 
+%% Calculate displacement (x,y,z)
 postDisp = calcDisp(acc,t); %calculate pose data from calcDisp function
 
 %% Plot original data
@@ -41,24 +42,30 @@ xlabel('Time (s)');
 ylabel('Angular Displacement (\circ)');
 legend('Yaw', 'Pitch', 'Roll');
 
-%% Apply Median filter
+%% Calculate Sample Frequency
 fs = 1 / mean(diff(t));             % sampling frequency
 
+%% Median Filter
 % med_fil = medfilt1(acc,5);        % median filt of acc data over 5 sample window
 % acc_fil = lowpass(acc,1,fs);      % conventional low pass filter
 % acc_fil = lowpassfilt(acc);       % low pass on median filtered data
-
 
 %% Butterworth Band-Pass Filtering
 
 %accel_zero = zeros(1,length(acc_fil)); %to compare correct '0' in plot
 
-order = 2;     %order of the filter
-fcutlow=1;     %low cut frequency in Hz
-fcuthigh=5;   %high cut frequency in Hz
+% order = 2;     %order of the filter
+% fcutlow=1;     %low cut frequency in Hz
+% fcuthigh=5;   %high cut frequency in Hz
+% 
+% [b,a]=butter(order,[fcutlow,fcuthigh]/(fs/2),'bandpass');
+% acc_fil = filtfilt(b, a, acc);
 
-[b,a]=butter(order,[fcutlow,fcuthigh]/(fs/2),'bandpass');
-acc_fil = filtfilt(b, a, acc);
+%% Kalman Filter
+
+% [kest,L,P] = kalman(sys,Qn,Rn,Nn)
+% [kest,L,P] = kalman(sys,Qn,Rn,Nn,sensors,known)
+% [kest,L,P,M,Z] = kalman(sys,Qn,Rn,...,type)
 
 %% Plot filtered data
 figure; hold on

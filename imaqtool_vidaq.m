@@ -21,11 +21,11 @@ triggerconfig(vid, 'Manual');
 
 %% Gather Frames
 start(vid)
-tic
 
 %change frame num
 frame_num = input('How many frames do you want? [#]  '); 
 
+tic
 for i = 1:frame_num
     
     frames{i} = getsnapshot(vid);
@@ -36,6 +36,7 @@ for i = 1:frame_num
     %         fprintf('Start time of data acquistion: %s \n', datestr(now,'mm-dd-yyyy MM.SS.FFF'));
     %     end
 end
+
 
 %% Close Video
 stop(vid)

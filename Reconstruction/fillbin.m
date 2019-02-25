@@ -14,6 +14,7 @@ function bin = fillbin(frame,pose,bin)
 %                    method
 %
 
+%% Read bin and pose data
 voxSz = size(bin);  % dimension of bin
 vox2add = zeros(voxSz(1),voxSz(2),voxSz(3));    % initialize bin
 
