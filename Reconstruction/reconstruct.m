@@ -54,7 +54,7 @@ frames = {};
 % For video files (.avi, .mp4, etc.)
 while hasFrame(vid)
 %     frames{end + 1} = im2double(imcrop(rgb2gray(readFrame(vid)),rect));
-    frames{end + 1} = imcrop(rgb2gray(readFrame(vid)),rect);
+    frames{end + 1} = double(imcrop(rgb2gray(readFrame(vid)),rect));
 end
 
 % Tag frames with pose data with linear interpolation
@@ -86,7 +86,7 @@ depth = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 mm_per_pixel = {};
 res = containers.Map(freq,mm_per_pixel);
 
-%% 4) Reconstruction (distribution step)
+%% 4a) Reconstruction (distribution step) - fat side
 % Fill voxels - PNN algorithm
 % for i = 1:9
 %     frames{i} = zeros(15,30);
@@ -105,7 +105,7 @@ for i = 1:8
     frames{end + 1} = 32 * i * ones(50,30,'uint8');
 end
 
-bin_ds = fillbin(frames,pose,50,1,'fat',1);
+bin_ds = fillbin_thick(frames,pose,50,1,1);
 
 % figure
 % subplot(1,2,1)
@@ -117,6 +117,16 @@ scatter3(a,b,c,20,bin_ds(idx),'filled');
 colormap(jet)
 colorbar
 % title('DS')
+
+%% Reconstruction - thin side
+noFrames = 3;
+angle = linspace(15,-15,noFrames);
+% angle = 75;
+frames = frames(1:noFrames);
+
+bin_thin = fillbin_thin(frames,angle,50,1,'nearest');
+
+
 
 %% 5a) Reconstruction (hole-filling step)
 n = 9;  % grid size

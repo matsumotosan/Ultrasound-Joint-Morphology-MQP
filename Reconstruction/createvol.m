@@ -1,4 +1,4 @@
-function [vol,center] = createvol(varargin)
+function [vol,center,corners] = createvol(varargin)
 %CREATEVOLDATA Create 3D matrix to simulate volumetric data
 %
 %   VOL = CREATEVOL(SHAPE) creates a 3-D uint8 matrix in the SHAPE
@@ -29,7 +29,7 @@ switch lower(varargin{1})
         vol(center(1) - D + 1:center(1) + D, ...
             center(2) - D + 1:center(2) + D, ...
             center(3) - D + 1:center(3) + D) = 255;
-    case 'cuboid'
+    case 'cuboid'   % broken
         center = round([lim(1) / 2, lim(2) / 2, lim(3) / 2 - D(3)]);   % shape center
         vol(center(1) - D(1) + 1:center(1) + D(1), ...
             center(2) - D(2) + 1:center(2) + D(2), ...
@@ -40,13 +40,17 @@ switch lower(varargin{1})
             (Y - center(2)) .^ 2 + ...
             (Z - center(3)) .^ 2);
         vol(R <= D) = 255;
-    case 'ellipsoid'    % not working yet
+    case 'ellipsoid'    % broken
         center = round([lim(1), lim(2), lim(3) / 2 - D(3)]);   % shape center
         R = sqrt(((X - center(1)) / D(1)) .^ 2 + ...
             ((Y - center(2)) / D(2)) .^ 2 + ...
             ((Z - center(3)) / D(3)) .^ 2);
         vol(R <= 1) = 255;
 end
+
+% Find corners of minimum bounding box
+[xx,yy,zz] = ind2sub(size(vol),find(vol));
+[~,corners] = minboundbox(xx,yy,zz);
 
 % Plot data
 % figure;
