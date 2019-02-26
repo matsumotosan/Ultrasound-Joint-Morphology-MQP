@@ -20,23 +20,18 @@ clear; close all; clc
 
 
 %% Idea 2: Parallel MATLAB workers
-if exist('vid')
-    stop(vid);
-end
+% if exist('vid')
+%     stop(vid);
+% end
 
 % IMU info
 baudrate = 115200;
-% port = 'COM5';   % Arduino UNO
-port = 'COM6';   % Arduino Nano
+port = 'COM5';   % Arduino UNO
+%port = 'COM6';   % Arduino Nano
 n = 1000;        % number of IMU measurements
 
 % US info
 noframes = 100;
-
-% Acquire images
-vid = videoinput('winvideo',1,'UYVY_720x480');
-preview(vid);
-triggerconfig(vid, 'Manual');
 
 delete(gcp('nocreate'))
 parpool(2)

@@ -8,7 +8,7 @@ s = serial(port,'BaudRate',baudrate);
 s.ReadAsyncMode = 'manual';
 set(s,'InputBufferSize',100);
 
-pause(2);
+pause(15);
 
 % Connect the serial port to Arduino
 try
@@ -46,6 +46,8 @@ while(Flag_Initializing)
         Flag_Initializing = false;
     end
 end
+
+ypr = zeros(1:4);
 
 % Stall data collection until IMU output stabilized
 STABLE = false;
