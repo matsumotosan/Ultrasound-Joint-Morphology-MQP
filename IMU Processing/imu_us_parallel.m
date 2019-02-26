@@ -1,4 +1,4 @@
-%% Acquire IMU data and US images simultaneously
+% %% Acquire IMU data and US images simultaneously
 % Requires Parallel Processing Toolbox
 % This script contains program to collect US images
 
@@ -26,12 +26,12 @@ end
 
 % IMU info
 baudrate = 115200;
-port = 'COM5';   % Arduino UNO
+% port = 'COM5';   % Arduino UNO
 port = 'COM6';   % Arduino Nano
 n = 1000;        % number of IMU measurements
 
 % US info
-
+noframes = 100;
 
 % Acquire images
 vid = videoinput('winvideo',1,'UYVY_720x480');
@@ -48,9 +48,10 @@ parfor idx = 1:2
     if idx == 1
         imu_data = collect_imu(baudrate,port,n);    %IMU data acquisition
     elseif idx == 2
-        us_data = collect_us();   % US image acquisiton
+        us_data = collect_us(noframes);             % US image acquisiton
     end
     
+    % Save variables
     parsave(sprintf(fname,idx),x,y);
 end
 

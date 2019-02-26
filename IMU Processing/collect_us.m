@@ -2,7 +2,8 @@ function us_data = collect_us(noframes)
 %% Gather Frames
 start(vid)
 
-us_data = {};
+% Initialize cell array
+us_data = cell(noframes,2);
 
 tic
 for i = 1:noframes
