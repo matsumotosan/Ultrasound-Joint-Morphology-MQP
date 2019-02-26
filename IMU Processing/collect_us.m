@@ -9,8 +9,7 @@ tic
 for i = 1:noframes
     
     % Gather frame and time data
-    us_data{i,1} = getsnapshot(vid);
-    us_data{i,2} = toc;
+    us_data{i,:} = {getsnapshot(vid),toc};
 
     % potential timestamp tag
     %     if i == 1

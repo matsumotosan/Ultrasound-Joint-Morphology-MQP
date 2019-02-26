@@ -90,6 +90,8 @@ end
 % delete(vid)
 
 %%
-function parsave(fname,x,y)
-    save(fname,'x','y')
+parfor ii = 1:4
+    x = rand(10,10);
+    y = ones(1,3);
+    parsave(sprintf('output%d.mat', ii), x, y);
 end
