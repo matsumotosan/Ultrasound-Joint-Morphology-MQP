@@ -1,15 +1,15 @@
-function test2()
+function us_data = collect_us(noframes)
 %% Gather Frames
 start(vid)
 
-%change frame num
-frame_num = 10
+us_data = {};
 
 tic
-for i = 1:frame_num
+for i = 1:noframes
     
-    frames{i} = getsnapshot(vid);
-    t(i) = toc;
+    % Gather frame and time data
+    us_data{i,1} = getsnapshot(vid);
+    us_data{i,2} = toc;
 
     % potential timestamp tag
     %     if i == 1
@@ -23,7 +23,7 @@ delete(vid)
 
 %% Calculate fs
 
-t = t';
-fs = 1/mean(diff(t));
+% t = t';
+% fs = 1/mean(diff(t));
 
 end
