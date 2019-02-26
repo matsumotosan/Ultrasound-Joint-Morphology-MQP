@@ -10,8 +10,8 @@ clear; clc; close all
 % Change the COM Port number as needed
 baudrate = 115200; %74880;%9600;
 
-%port = '/dev/tty.usbmodem14101'; %for Shion
-port = 'COM5'; %for Rosie
+port = '/dev/tty.usbmodem14101'; %for Shion
+%port = 'COM5'; %for Rosie
 %port = 'COM6'; %for Olivia
 s = serial(port,'BaudRate',baudrate);
 s.ReadAsyncMode = 'manual';
