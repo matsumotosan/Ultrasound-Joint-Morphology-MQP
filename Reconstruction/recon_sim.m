@@ -7,7 +7,11 @@ clear; clc; close all
 % reconstruct the frames into a volume and is compared to a ground truth
 % volume.
 
-%% PART 1: FAT SIDE ROTATION
+%% PART 1: RECONSTRUCTION IN PITCH - BIN FILL DEMO
+
+
+
+%% PART 2: RECONSTRUCTION IN PITCH - VERIFICATION
 % Create shape
 shape = {'cube','sphere','cuboid'};
 shapenum = 1;
@@ -107,24 +111,44 @@ zlabel('Z')
 grid on
 view(3)
 
-%% PART 2: THIN SIDE ROTATION
+%% PART 3: RECONSTRUCTION IN YAW - BIN FILL DEMO
+clear; clc; close all
+
 % Define ground truth cross section
 box = zeros(51,51);
 sq1 = ones(10,10);
 sq1_center = [26,26];
-noSlices = 9;
+noSlices = 10;
 angles = linspace(-90, 90, noSlices);
 
 frames = {};
 for i = 1:noSlices
-    frames{i} = 255 * ones(50);
+    frames{i} = 100 * ones(50);
 end
 
 % figure;
-% bin_thin = fillbin_thin(frames,angle,100,'nearest');
-% imshow(uint8(bin_thin))
-% colormap jet
-% colorbar
+method = {'nearest','bilinear','bicubic'};
+bin_thin = fillbin_thin(frames,angles,50,method{1});
+
+% Compare interpolation methods
+% for i = 1:length(method)
+%     bin_thin = fillbin_thin(frames,angles,50,method{i});
+%     ax = subplot(1,3,i); hold on
+%     imshow(uint8(bin_thin)); axis on; hold on
+%     colormap(ax,parula)
+%     colorbar
+%     caxis([0 255])
+%     title(method{i});
+%     xlabel('Horizontal')
+%     ylabel('Depth')
+% end
+
+%% PART 4: RECONSTRUCTION IN YAW - VERIFICATION
+box_sz = [200 100];
+mystery_box = randi([0 255], box_sz(1), box_sz(2));
+
+
+
 
 %% Sutherland-Hodgman Algorithm
 % define the 6 planes of a box

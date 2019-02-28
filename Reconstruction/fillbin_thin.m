@@ -30,28 +30,39 @@ end
 
 bin = floor(bin / length(frame));
 
-% Grayscale image
-figure; hold on
-imshow(uint8(bin)); 
-% colormap jet
+% % Grayscale image
+% subplot(1,2,1);
+% imshow(uint8(bin)); axis on; hold on
 % colorbar
+% plot(p(1),p(2),'r+','MarkerSize',20);   % rotation point
+% title('Grayscale Reconstruction')
+% xlabel('Horizontal')
+% ylabel('Depth')
+% 
+% % Colored image
+% ax2 = subplot(1,2,2);
+% imshow(uint8(bin)); axis on; hold on
+% colormap(ax2,parula)
+% colorbar
+% caxis([min(min(bin)) max(max(bin))])
+% plot(p(1),p(2),'r+','MarkerSize',20);   % rotation point
+% title('Reconstruction With Colors')
+% xlabel('Horizontal')
+% ylabel('Depth')
 
-% plot(p(2),p(1),'r+','MarkerSize',20);   % rotation point
-title('Grayscale Reconstruction')
-xlabel('Horizontal')
-ylabel('Depth')
 
 end
 
+%%
 function [dims,rows,cols,point] = init_bin(frame,r)
     % Pixel dimension of frames
     [fh,fw] = size(frame);
 
     % Reconstruction window size
-    dims = [r + fw,2 * (fh + r)];
+    dims = [r + 2 * fw,2 * (fh + r)];
 
     % Index of initial image insertion in placeholder bin
-    rows = floor(fw / 2:fw / 2 + fh);
+    rows = floor(fw / 4:fw / 4 + fh);
     cols = floor((dims(2) - fw) / 2:(dims(2) - fw) / 2 + fw); 
     
     % Point to rotate around
