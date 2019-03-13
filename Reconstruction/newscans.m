@@ -1,4 +1,4 @@
-function [scans,shapebin] = newscans(frame_size,angles,r,shape,shape_size)
+function [scans,shapebin,mv] = newscans(frame_size,angles,r,shape,shape_size)
 %NEWSCANS Create simulated US data
 %
 % NEWSCANS(FRAME_SIZE,ANGLES,RADIUS,SHAPE_SIZE,) - 
@@ -39,11 +39,12 @@ for i = 1:length(angles)
     framebin(rows,cols) = framebin(rows,cols) + 2 * ones(fh,fw);
     framebin = rotateAround(framebin, p(1), p(2), angles(i));
     totalbin = framebin + shapebin;
-    figure
+%     figure
     imagesc(totalbin)
     totalbin = rotateAround(totalbin, p(1), p(2), -angles(i));
 %     figure
 %     imagesc(totalbin)
+    mv(i) = getframe;
     [r,c] = find(totalbin > 1);
     s = totalbin(min(r):max(r),min(c):max(c));
     s(s < 2) = 2;

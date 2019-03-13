@@ -184,12 +184,12 @@ clear; clc; close all
 
 % Create simulated scans
 frameSz = [40,20];
-angles = linspace(90,-45,20);
+angles = linspace(-90,90,50);
 radius = 30;
 shape = {'square','circle'};
 shapeSz = 20;
 
-[scans,shapebin] = newscans(frameSz,angles,radius,shape{2},shapeSz);
+[scans,shapebin,mv] = newscans(frameSz,angles,radius,shape{1},shapeSz);
 
 % Reconstruct
 mm_per_pixel = 1;
