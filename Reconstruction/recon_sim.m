@@ -7,6 +7,35 @@ clear; clc; close all
 % reconstruct the frames into a volume and is compared to a ground truth
 % volume.
 
+%% Cropping window for depth setting
+% depth = (1:16) * 10; % depth (mm)
+% 
+% % Cropping window
+% win = {[60 553 60 189];
+%        [60 553 60 320];
+%        [81 532 60 418];
+%        [138 477 60 418];
+%        [173 443 60 418];
+%        [195 420 60 418];
+%        [210 403 60 418];
+%        [222 391 60 418];
+%        [232 381 60 418];
+%        [237 374 60 418];
+%        [245 367 60 418];
+%        [252 364 60 418];
+%        [255 358 60 418];
+%        [261 355 60 418];
+%        [262 351 60 418];
+%        [265 348 60 418]};   
+% 
+% % cm/pixel
+% for i = 1:length(win)
+%     win{i}(5) = depth(i) / (win{i}(4) - win{i}(3));   
+% end
+% 
+% M = containers.Map(depth,win);
+
+
 %% PART 1: RECONSTRUCTION IN PITCH - BIN FILL DEMO
 
 
@@ -114,21 +143,28 @@ view(3)
 %% PART 3: RECONSTRUCTION IN YAW - BIN FILL DEMO
 clear; clc; close all
 
-% Define ground truth cross section
-box = zeros(51,51);
-sq1 = ones(10,10);
-sq1_center = [26,26];
-noSlices = 10;
-angles = linspace(-90, 90, noSlices);
+% Rail and frame data
+setting = load('us_setting_map.mat');
+depth = 70;                             % US setting (mm)
+win_data = setting.M(depth);            % load setting
+mm_per_pixel = win_data(5);             % frame mm/pixel resolution
+r = 70;                                 % rail radius (mm)
 
+% Define slices
+noSlices = 3;
+angles = linspace(-45, 45, noSlices);
+method = {'nearest','bilinear','bicubic'};
+
+% Create fake frames
 frames = {};
+nrows = win_data(4) - win_data(3);
+ncols = win_data(2) - win_data(1);
 for i = 1:noSlices
-    frames{i} = 100 * ones(50);
+    frames{i} = 100 * ones(nrows,ncols);
 end
 
-% figure;
-method = {'nearest','bilinear','bicubic'};
-bin_thin = fillbin_thin(frames,angles,50,method{1});
+% Reconstruction in yaw
+bin_thin = fillbin_thin(frames,angles,r,mm_per_pixel,method{3});
 
 % Compare interpolation methods
 % for i = 1:length(method)
@@ -137,17 +173,37 @@ bin_thin = fillbin_thin(frames,angles,50,method{1});
 %     imshow(uint8(bin_thin)); axis on; hold on
 %     colormap(ax,parula)
 %     colorbar
-%     caxis([0 255])
+%     caxis([0 max(max(bin_thin))])
 %     title(method{i});
 %     xlabel('Horizontal')
 %     ylabel('Depth')
 % end
 
 %% PART 4: RECONSTRUCTION IN YAW - VERIFICATION
-box_sz = [200 100];
-mystery_box = randi([0 255], box_sz(1), box_sz(2));
+clear; clc; close all
 
+% Create simulated scans
+frameSz = [40,20];
+angles = linspace(-90,90,50);
+radius = 30;
+shape = {'square','circle'};
+shapeSz = 20;
 
+[scans,shapebin,mv] = newscans(frameSz,angles,radius,shape{1},shapeSz);
+
+% Reconstruct
+mm_per_pixel = 1;
+method = {'nearest','bilinear','bicubic'};
+bin_yaw = fillbin_yaw(scans,angles,radius,mm_per_pixel,method{3});
+
+% Compare original and reconstructed shape
+figure;
+subplot(1,2,1)
+imagesc(shapebin)
+title('Original')
+subplot(1,2,2)
+imagesc(bin_yaw)
+title('Reconstructed')
 
 
 %% Sutherland-Hodgman Algorithm
