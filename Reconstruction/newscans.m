@@ -1,4 +1,4 @@
-function [scans,shapebin,mv] = newscans(frame_size,angles,r,shape,shape_size)
+function [scans,shapebin] = newscans(frame_size,angles,r,shape,shape_size)
 %NEWSCANS Create simulated US data
 %
 % NEWSCANS(FRAME_SIZE,ANGLES,RADIUS,SHAPE_SIZE,) - 
@@ -27,24 +27,35 @@ switch lower(shape)
     case 'circle'
         [X,Y] = meshgrid(1:dims(2),1:dims(1));
         R = sqrt((X - p(2)) .^ 2 + (Y - p(1)) .^ 2);
-        shapebin(R <= shape_size) = 1;
+        shapebin(R <= shape_size / 2) = 1;
+    case 'composite'
+        shapebin(p(1) - shape_size / 2:p(1) + shape_size / 2, ...
+                 p(2) - shape_size / 2:p(2) + shape_size / 2) = 1;
+        [X,Y] = meshgrid(1:dims(2),1:dims(1));
+        dx = 10; dy = 10;
+        R = sqrt((X - p(2) + dx) .^ 2 + (Y - p(1) + dy) .^ 2);
+        shapebin(R <= shape_size / 2) = 1;
     otherwise
         error("SHAPE must be 'square' or 'circle'")
 end
 
 % Fill bin, rotate frame, overlap, rotate back, extract frame
 scans = {};
+figure
 for i = 1:length(angles)
     framebin = bin;
     framebin(rows,cols) = framebin(rows,cols) + 2 * ones(fh,fw);
     framebin = rotateAround(framebin, p(1), p(2), angles(i));
     totalbin = framebin + shapebin;
-%     figure
-    imagesc(totalbin)
+%     subplot(1,2,1)
+%     imagesc(totalbin)
+    subplot(1,length(angles),i);
+    imagesc(totalbin); hold on
+    plot(p(2),p(1),'r+')
     totalbin = rotateAround(totalbin, p(1), p(2), -angles(i));
 %     figure
+%     subplot(1,2,2)
 %     imagesc(totalbin)
-    mv(i) = getframe;
     [r,c] = find(totalbin > 1);
     s = totalbin(min(r):max(r),min(c):max(c));
     s(s < 2) = 2;

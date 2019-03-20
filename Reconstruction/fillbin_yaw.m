@@ -24,6 +24,9 @@ for i = 1:length(frame)
     
     % Rotate frame around point
     bin2add = rotateAround(bin2add,p(1),p(2),angle(i),method);
+     
+%     figure
+%     imagesc(bin2add)
     
     % Add to bin
     bin = bin + bin2add;
@@ -48,22 +51,22 @@ end
 
 % Colored image
 % ax2 = subplot(1,2,2);
-ax2 = figure;
-imagesc(uint8(bin)); hold on
-colormap(ax2,parula)
-colorbar
-plot(p(2),p(1),'r+','MarkerSize',20);   % rotation point
-title('Reconstruction in Yaw (Colors)')
-xlabel('X (mm)')
-ylabel('Y (mm)')
-set(gca,'TickDir','out');
-xticks(linspace(0,size(bin,2),10));
-xticklabels(linspace(0,size(bin,2) * mm_per_pixel,10));
-xtickangle(45)
-yticks(linspace(0,size(bin,1),10));
-yticklabels(linspace(0,size(bin,1) * mm_per_pixel,10));
-daspect([1 1 1])
-axis on
+% ax2 = figure;
+% imagesc(uint8(bin)); hold on
+% colormap(ax2,parula)
+% colorbar
+% plot(p(2),p(1),'r+','MarkerSize',20);   % rotation point
+% title('Reconstruction in Yaw (Colors)')
+% xlabel('X (mm)')
+% ylabel('Y (mm)')
+% set(gca,'TickDir','out');
+% xticks(linspace(0,size(bin,2),10));
+% xticklabels(linspace(0,size(bin,2) * mm_per_pixel,10));
+% xtickangle(45)
+% yticks(linspace(0,size(bin,1),10));
+% yticklabels(linspace(0,size(bin,1) * mm_per_pixel,10));
+% daspect([1 1 1])
+% axis on
 
 end
 

@@ -179,22 +179,26 @@ bin_thin = fillbin_thin(frames,angles,r,mm_per_pixel,method{3});
 %     ylabel('Depth')
 % end
 
-%% PART 4: RECONSTRUCTION IN YAW - VERIFICATION
+%% PART 4: RECONSTRUCTION IN YAW - SIMULATED B-SCAN
 clear; clc; close all
 
 % Create simulated scans
 frameSz = [40,20];
-angles = linspace(-90,90,50);
-radius = 30;
-shape = {'square','circle'};
+angles = linspace(-90,90,5);
+radius = [30];
+shape = {'square','circle','composite'};
 shapeSz = 20;
-
-[scans,shapebin,mv] = newscans(frameSz,angles,radius,shape{1},shapeSz);
 
 % Reconstruct
 mm_per_pixel = 1;
 method = {'nearest','bilinear','bicubic'};
-bin_yaw = fillbin_yaw(scans,angles,radius,mm_per_pixel,method{3});
+for i = 1:length(radius)
+    [scans,shapebin] = newscans(frameSz,angles,radius(i),shape{3},shapeSz);
+    bin_yaw = fillbin_yaw(scans,angles,radius(i),mm_per_pixel,method{1});
+%     subplot(1,length(radius),i)
+%     imagesc(bin_yaw)
+%     title(['r=' num2str(radius(i))])
+end
 
 % Compare original and reconstructed shape
 figure;
@@ -204,6 +208,9 @@ title('Original')
 subplot(1,2,2)
 imagesc(bin_yaw)
 title('Reconstructed')
+
+% Overlay original and reconstructed shape
+
 
 
 %% Sutherland-Hodgman Algorithm
