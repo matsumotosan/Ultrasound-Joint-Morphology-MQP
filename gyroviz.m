@@ -13,8 +13,8 @@ baudrate = 115200;%38400;%115200; %74880;%9600;
 %port = '/dev/tty.usbmodem14101'; %for Shion
 %port = 'COM6'; %for Olivia
 
-port = 'COM5'; %for Rosie Uno 
-%port = 'COM6'; %for Rosie Nano
+%port = 'COM5'; %for Rosie Uno 
+port = 'COM6'; %for Rosie Nano
 
 s = serial(port,'BaudRate',baudrate);
 s.ReadAsyncMode = 'manual';
