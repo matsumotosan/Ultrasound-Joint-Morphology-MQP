@@ -1,4 +1,4 @@
-function bin = fillbin_thick(frame,pose,r,pad)
+function bin = fillbin_pitch(frame,pose,r,pad)
 %FILLBIN_THICK - Distribute pixels to representative voxels
 %
 %   BIN = FILLBIN(FRAME,POSE,R,PAD) rotates and translates every from
