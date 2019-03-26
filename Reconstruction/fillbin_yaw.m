@@ -11,16 +11,16 @@ function bin = fillbin_yaw(frame,angle,r,mm_per_pixel,method)
 %
 %%
 
+% Calculate bin information from given
 r_pix = r / mm_per_pixel;                       % rail radius in pixels
-[dims,r,c,p] = init_bin(frame{1},r_pix,angle);  % bin info
+[dims,rows,cols,p] = init_bin(frame{1},r_pix,angle);
 
-bin = zeros(dims(1),dims(2),'double');          % initialize bin
-mask = zeros(dims(1),dims(2),'like',bin);       % initialize mask
+% Initialize bin and mask
+bin = zeros(dims(1),dims(2),'double');
+mask = zeros(dims(1),dims(2),'like',bin);
+
+% Create frame mask to track number of intersections at every pixel
 frame_mask = ones(size(frame{1},1),size(frame{1},2),'like',bin);
-
-% Frame insertion position
-rows = r(1):r(2);
-cols = c(1):c(2);
 
 for i = 1:length(frame)
     % Initialize bin and mask
@@ -31,7 +31,10 @@ for i = 1:length(frame)
     bin2add(rows(:),cols(:)) = bin2add(rows(:),cols(:)) + frame{i};
     
     figure
-    imagesc(bin2add)
+    subplot(1,2,1);
+    imagesc(bin2add); hold on
+    plot(p(1),p(2),'r+')
+    axis equal
     
     % Add mask frame to mask
     mask2add(rows(:),cols(:)) = mask2add(rows(:),cols(:)) + frame_mask;
@@ -40,7 +43,10 @@ for i = 1:length(frame)
     bin2add = rotateAround(bin2add,p(1),p(2),angle(i),method);
     mask2add = rotateAround(mask2add,p(1),p(2),angle(i),method);
     
-    imagesc(bin2add)
+    subplot(1,2,2);
+    imagesc(bin2add); hold on
+    plot(p(1),p(2),'r+')
+    axis equal
     
 %     figure
 %     imagesc(bin2add)
@@ -49,12 +55,14 @@ for i = 1:length(frame)
     bin = bin + bin2add;
     mask = mask + mask2add;
     
-    imagesc(bin)
+%     imagesc(bin)
 end
 
-% Average pixel values
-mask(mask < 1) = 1;
-bin = bin ./ mask;
+% Average pixel values - pixel value divided by number of times B-scan
+% intersected pixel
+mask(mask < 1) = 1; % avoid division by zero
+bin = bin ./ mask;  % average pixel values
+
 
 % Grayscale image
 % subplot(1,2,1);
@@ -91,75 +99,28 @@ bin = bin ./ mask;
 
 end
 
-%%
-function [dims,rows,cols,center] = init_bin(frame,r,angle)
+%% Bin initialization
+function [dims,rows,cols,p] = init_bin(frame,r,angle)
     % Dimensions of frame
     [fh,fw] = size(frame);
     
     % Find minimum bounding box
-    center = floor([fw / 2, r - fh]);
+    center = floor([fw / 2, fh - r]);
     rows = [1 fh];
     cols = [1 fw];
-    [bbox_x, bbox_y] = rot_bbox(cols, rows, center, angle, 'y');
+    [bbox_x, bbox_y, center, x, y] = rot_bbox(cols, rows, center, angle, 'y');
     
-    % Calculate offset to convert all coordinates relative to global origin
-    shift_x = -min(bbox_x) + 1;
-    if min(bbox_y) < center(2)
-        shift_y = -min(bbox_y) + 1;
-    else
-        shift_y = -center(2) + 1;
-    end
+    % Bin size (indexing to be 1:rows and 1:cols
+    dims = [bbox_y(2), bbox_x(2)];   % [rows, cols]
     
-    % Shift center
-    center = center + [shift_x, shift_y];
+    % Redefine points in the imshow coordinate axis - origin at top left
+    % corner (positive x -> right, positive y -> down)
     
-    % Shift default rows and columns of frame
-    rows = rows + shift_y;
-    cols = cols + shift_x;
+    % Center of rotation
+    p = [dims(1) - center(2) + 1, center(1)];
     
-    % Align bottom left corner of bbox with (0,0)
-    bbox_x = bbox_x + shift_x;
-    bbox_y = bbox_y + shift_y;
-    dims = [max(bbox_y) max(bbox_x)];
+    % Default frame in rows and cols
+    rows = dims(1) - y(2) + 1:dims(1) - y(1) + 1;
+    cols = x(1):x(2);
     
-%     % Plot newly calculated center, default frame location, and bbox
-%     % Shifted center of rotation
-%     figure; hold on 
-%     plot(center(1), center(2), 'r+');
-%     
-%     % Default frame location
-%     k = convhull(x,y);
-%     plot(x(k),y(k),'-ro');
-%     
-%     % Shifted minimum bounding box
-%     
-%     k = convhull(bbox_x, bbox_y);
-%     plot(bbox_x(k), bbox_y(k), '-k*');
-%     
-%     % All rotated frames
-%     for i = 1:length(angle)
-%         k = convhull(x2(i,:), y2(i,:));
-%         plot(x2(i,k),y2(i,k),'--bo');
-%     end
-% 
-%     title('Minimum bounding box of frames (shifted)');
-%     xlabel('X'); ylabel('Y');
-%     legend('Center of Rotation', 'Original', 'Bounding Box', 'Rotated Frames');
-%     axis equal
-    
-%     if (r > fh)
-%         r_max = ceil(rssq([r, fw / 2]));
-%     else
-%         r_max = ceil(rssq([fh, fw / 2]));
-%     end
-%     
-%     % Reconstruction window size
-%     dims = ceil([r_max + fw / 2, 2 * r_max]);
-% 
-%     % Index of initial image insertion in placeholder bin
-%     rows = ceil(r_max - r + 1:r_max - r + fh);
-%     cols = ceil(r_max - fw / 2 + 1:r_max + fw / 2); 
-%     
-%     % Point to rotate around
-%     point = [2 * r_max - r,r_max];
 end

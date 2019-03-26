@@ -4,20 +4,30 @@ function [scans,shapebin] = newscans(frame_size,angles,r,shape,shape_size)
 % NEWSCANS(FRAME_SIZE,ANGLES,RADIUS,SHAPE_SIZE,) - 
 
 %%
+% Frame dimensions
+fh = frame_size(1); % height (no rows)
+fw = frame_size(2); % width (no cols)
+
+% Frame rotation dimensions
+center = floor([fw / 2, fh - r]);   % center of rotation
+rows = [1 fh];  % initial frame rows
+cols = [1 fw];  % initial frame columns
+
+% Find bounding box
+[bbox_x, bbox_y, center, x, y] = rot_bbox(cols, rows, center, angles);
+
 % Initialize bin
-fh = frame_size(1);
-fw = frame_size(2);
+dims = [bbox_y(2), bbox_x(2)];
+bin = zeros(dims(1),dims(2));    % initialize bin
 
-r_max = ceil(norm([r, fw / 2]));            % traversing radius
-dims = ceil([r_max + fw, 2 * r_max]);       % bin size
-bin = zeros(dims(1),dims(2));               % initialize bin
+% Default frame in rows and cols
+rows = dims(1) - y(2) + 1:dims(1) - y(1) + 1;
+cols = x(1):x(2);
 
-rows = ceil(r_max - r + 1:r_max - r + fh);          % default frame rows
-cols = ceil(r_max - fw / 2 + 1:r_max + fw / 2);     % default frame columns
+% Center of rotation
+p = [dims(1) - center(2) + 1, center(1)];
 
-p = [2 * r_max - r,r_max];  % point to rotate around, also center of shape
-
-% Create second bin with shape
+% Create second bin to contain shape
 shapebin = zeros(dims(1),dims(2));
 
 switch lower(shape)
@@ -41,21 +51,20 @@ end
 
 % Fill bin, rotate frame, overlap, rotate back, extract frame
 scans = {};
-figure
+figure; hold on
 for i = 1:length(angles)
+    % Find intersection between framebin and shapebin
     framebin = bin;
     framebin(rows,cols) = framebin(rows,cols) + 2 * ones(fh,fw);
     framebin = rotateAround(framebin, p(1), p(2), angles(i));
     totalbin = framebin + shapebin;
-%     subplot(1,2,1)
-%     imagesc(totalbin)
+
     subplot(1,length(angles),i);
     imagesc(totalbin); hold on
     plot(p(2),p(1),'r+')
     totalbin = rotateAround(totalbin, p(1), p(2), -angles(i));
-%     figure
-%     subplot(1,2,2)
-%     imagesc(totalbin)
+    
+    % Extract scan from totalbin
     [r,c] = find(totalbin > 1);
     s = totalbin(min(r):max(r),min(c):max(c));
     s(s < 2) = 2;
