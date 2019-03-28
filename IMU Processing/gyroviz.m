@@ -114,7 +114,7 @@ end
 
 fclose(s);
 
-%% Calculate displacement (x,y,z)
+%% Extract data of interest
 close all; clc
 
 ypr = pose(2:end,2:4);
@@ -128,9 +128,10 @@ ylabel('Degrees (\circ)');
 legend('Yaw', 'Pitch', 'Roll');
 grid on; 
 
-%% Apply smoothingfilter
+%% Apply smoothing filter
 
-lp_ypr = smoothdata(ypr,1,'sgolay');
+lp_ypr = smoothdata(ypr,1,'movmedian'); %better for euler
+%lp_ypr = smoothdata(ypr,1,'sgolay');
 
 figure(2);
 

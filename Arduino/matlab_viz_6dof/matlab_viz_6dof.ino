@@ -82,9 +82,10 @@ void setup()
   
   
   
-  
-  
-  
+// ================================================================
+// ===                      SET BAUDRATE                       ===
+// ================================================================
+
   Serial.begin(115200);
 
   
@@ -115,14 +116,17 @@ void setup()
   Serial.println(F("Initializing DMP..."));
   devStatus = mpu.dmpInitialize();
 
-  // supply your own gyro offsets here, scaled for min sensitivity
 
-    mpu.setXAccelOffset(-1844);
-    mpu.setYAccelOffset(-3536);
-    mpu.setZAccelOffset(990);
-    mpu.setXGyroOffset(108);
-    mpu.setYGyroOffset(39);
-    mpu.setZGyroOffset(-16);
+  
+// ================================================================
+// ===                      OFFSETS HERE                        ===
+// ================================================================
+    mpu.setXAccelOffset(-1823);
+    mpu.setYAccelOffset(-3514);
+    mpu.setZAccelOffset(981);
+    mpu.setXGyroOffset(112);
+    mpu.setYGyroOffset(36);
+    mpu.setZGyroOffset(-15);
 
 
   // make sure it worked (returns 0 if so)
