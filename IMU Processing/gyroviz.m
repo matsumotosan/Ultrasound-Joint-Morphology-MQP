@@ -15,7 +15,7 @@ s = serial(port,'BaudRate',baudrate);
 s.ReadAsyncMode = 'manual';
 set(s,'InputBufferSize',100);
 
-pause(2);
+pause(0.5);
 
 %% Connect the serial port to Arduino
 try
@@ -55,7 +55,7 @@ Flag_Initializing = true;
 while(Flag_Initializing)
     
     while(strcmp(s.TransferStatus,'read'))
-        pause(2);
+        pause(0.1);
     end
     
     readasync(s);
