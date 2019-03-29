@@ -121,12 +121,12 @@ void setup()
 // ================================================================
 // ===                      OFFSETS HERE                        ===
 // ================================================================
-    mpu.setXAccelOffset(-1823);
-    mpu.setYAccelOffset(-3514);
-    mpu.setZAccelOffset(981);
+    mpu.setXAccelOffset(-1974);
+    mpu.setYAccelOffset(-5424);
+    mpu.setZAccelOffset(2992);
     mpu.setXGyroOffset(112);
-    mpu.setYGyroOffset(36);
-    mpu.setZGyroOffset(-15);
+    mpu.setYGyroOffset(37);
+    mpu.setZGyroOffset(-14);
 
 
   // make sure it worked (returns 0 if so)
