@@ -28,8 +28,8 @@ Y = [y(1) y(1) y(2) y(2)];
 theta = theta(:);
 
 % Calculate x and y after rotation by theta around center
-x2 = center(1) + (X - center(1)) .* cosd(-theta) + (Y - center(2)) .* sind(-theta);
-y2 = center(2) - (X - center(1)) .* sind(-theta) + (Y - center(2)) .* cosd(-theta);
+x2 = center(1) + (X - center(1)) .* cosd(theta) + (Y - center(2)) .* sind(theta);
+y2 = center(2) - (X - center(1)) .* sind(theta) + (Y - center(2)) .* cosd(theta);
 
 % Bounding box x and y - if not integer take ceiling/floor to contain all
 % points
@@ -38,6 +38,7 @@ bbox_y = [floor(min([y(:); y2(:)])), ceil(max([y(:); y2(:)]))];
 
 % Plot unshifted bounding box, center, default frame location
 if (plotting)
+    figure
     subplot(1,2,1); hold on
     plot_bbox
     title('Minimum bounding box of frames (Unshifted)');

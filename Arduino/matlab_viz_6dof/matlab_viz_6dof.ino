@@ -117,12 +117,12 @@ void setup()
 
   // supply your own gyro offsets here, scaled for min sensitivity
 
-    mpu.setXAccelOffset(-1844);
-    mpu.setYAccelOffset(-3536);
-    mpu.setZAccelOffset(990);
-    mpu.setXGyroOffset(108);
-    mpu.setYGyroOffset(39);
-    mpu.setZGyroOffset(-16);
+    mpu.setXAccelOffset(-1876);
+    mpu.setYAccelOffset(-5377);
+    mpu.setZAccelOffset(3327);
+    mpu.setXGyroOffset(111);
+    mpu.setYGyroOffset(36);
+    mpu.setZGyroOffset(-13);
 
 
   // make sure it worked (returns 0 if so)

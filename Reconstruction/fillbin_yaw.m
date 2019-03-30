@@ -30,38 +30,37 @@ for i = 1:length(frame)
     % Add frame to bin
     bin2add(rows(:),cols(:)) = bin2add(rows(:),cols(:)) + frame{i};
     
-    figure
-    subplot(1,2,1);
-    imagesc(bin2add); hold on
-    plot(p(1),p(2),'r+')
-    axis equal
+    % Plot B-scan before rotated
+%     figure
+%     subplot(1,2,1);
+%     imagesc(bin2add); hold on
+%     plot(p(2),p(1),'r+')
+%     title('B-scan (Before Rotation)')
+%     axis equal
     
     % Add mask frame to mask
     mask2add(rows(:),cols(:)) = mask2add(rows(:),cols(:)) + frame_mask;
     
     % Rotate frame around point in bin and mask
-    bin2add = rotateAround(bin2add,p(1),p(2),angle(i),method);
-    mask2add = rotateAround(mask2add,p(1),p(2),angle(i),method);
+    bin2add = rotateAround(bin2add,p(1),p(2),-angle(i),method);
+    mask2add = rotateAround(mask2add,p(1),p(2),-angle(i),method);
     
-    subplot(1,2,2);
-    imagesc(bin2add); hold on
-    plot(p(1),p(2),'r+')
-    axis equal
-    
-%     figure
-%     imagesc(bin2add)
+    % Plot rotated B-scan
+%     subplot(1,2,2);
+%     imagesc(bin2add); hold on
+%     plot(p(2),p(1),'r+')
+%     title('B-scan (Rotated)')
+%     axis equal
     
     % Add to bin
     bin = bin + bin2add;
     mask = mask + mask2add;
-    
-%     imagesc(bin)
 end
 
 % Average pixel values - pixel value divided by number of times B-scan
 % intersected pixel
-mask(mask < 1) = 1; % avoid division by zero
-bin = bin ./ mask;  % average pixel values
+mask(mask == 0) = 1;
+bin = abs(bin ./ mask);  % average pixel values
 
 
 % Grayscale image
@@ -108,7 +107,7 @@ function [dims,rows,cols,p] = init_bin(frame,r,angle)
     center = floor([fw / 2, fh - r]);
     rows = [1 fh];
     cols = [1 fw];
-    [bbox_x, bbox_y, center, x, y] = rot_bbox(cols, rows, center, angle, 'y');
+    [bbox_x, bbox_y, center, x, y] = rot_bbox(cols, rows, center, angle);
     
     % Bin size (indexing to be 1:rows and 1:cols
     dims = [bbox_y(2), bbox_x(2)];   % [rows, cols]

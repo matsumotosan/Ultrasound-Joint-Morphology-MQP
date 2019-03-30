@@ -14,7 +14,7 @@ baudrate = 115200;%38400;%115200; %74880;%9600;
 %port = 'COM6'; %for Olivia
 
 %port = 'COM5'; %for Rosie Uno 
-port = 'COM6'; %for Rosie Nano
+%port = 'COM6'; %for Rosie Nano
 
 s = serial(port,'BaudRate',baudrate);
 s.ReadAsyncMode = 'manual';

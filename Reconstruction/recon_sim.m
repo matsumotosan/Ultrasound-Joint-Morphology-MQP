@@ -183,8 +183,8 @@ bin_thin = fillbin_yaw(frames,angles,r,mm_per_pixel,method{3});
 clear; clc; close all
 
 % Create simulated scans
-frameSz = [50,20];
-angles = linspace(-90,45,5);
+frameSz = [60,20];
+angles = linspace(-90,90,5);
 radius = [30];
 shape = {'square','circle','composite'};
 shapeSz = 20;
@@ -194,7 +194,7 @@ mm_per_pixel = 1;
 method = {'nearest','bilinear','bicubic'};
 for i = 1:length(radius)
     [scans,shapebin] = newscans(frameSz,angles,radius(i),shape{2},shapeSz);
-    bin_yaw = fillbin_yaw(scans,angles,radius(i),mm_per_pixel,method{3});
+    bin_yaw = fillbin_yaw(scans,angles,radius(i),mm_per_pixel,method{2});
 %     subplot(1,length(radius),i)
 %     imagesc(bin_yaw)
 %     title(['r=' num2str(radius(i))])
@@ -205,10 +205,14 @@ figure;
 subplot(1,2,1)
 imagesc(shapebin)
 title('Original')
+colorbar
+
+ssimval = ssim(shapebin,bin_yaw);   % structural similarity index
 
 subplot(1,2,2)
 imagesc(bin_yaw)
-title('Reconstructed')
+title(['Reconstructed ' '(SSIM:' num2str(ssimval), ')'])
+colorbar
 
 % subplot(1,3,3)
 % fz = imfuse(shapebin,bin_yaw,'falsecolor','Scaling','joint','ColorChannels',[1 2 0]);
@@ -221,8 +225,8 @@ C = xcorr2(shapebin,bin_yaw);
 surf(C); shading flat
 title('Normalized Cross Correlation Coefficient')
 
-ssimval = ssim(shapebin,bin_yaw);   % structural similarity index
 err = immse(shapebin,bin_yaw);      % mean-squared error
+[peaksnr, snr] = psnr(shapebin, bin_yaw);  % peak signal-to-noise ratio
 
 %% Sutherland-Hodgman Algorithm
 % define the 6 planes of a box
