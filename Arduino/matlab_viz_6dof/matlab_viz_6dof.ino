@@ -82,9 +82,10 @@ void setup()
   
   
   
-  
-  
-  
+// ================================================================
+// ===                      SET BAUDRATE                       ===
+// ================================================================
+
   Serial.begin(115200);
 
   
@@ -115,14 +116,17 @@ void setup()
   Serial.println(F("Initializing DMP..."));
   devStatus = mpu.dmpInitialize();
 
-  // supply your own gyro offsets here, scaled for min sensitivity
 
-    mpu.setXAccelOffset(-1876);
-    mpu.setYAccelOffset(-5377);
-    mpu.setZAccelOffset(3327);
-    mpu.setXGyroOffset(111);
-    mpu.setYGyroOffset(36);
-    mpu.setZGyroOffset(-13);
+  
+// ================================================================
+// ===                      OFFSETS HERE                        ===
+// ================================================================
+    mpu.setXAccelOffset(-1974);
+    mpu.setYAccelOffset(-5424);
+    mpu.setZAccelOffset(2992);
+    mpu.setXGyroOffset(112);
+    mpu.setYGyroOffset(37);
+    mpu.setZGyroOffset(-14);
 
 
   // make sure it worked (returns 0 if so)
@@ -211,21 +215,17 @@ void loop()
     #ifdef OUTPUT_READABLE_YAWPITCHROLL
     // display Euler angles in degrees
     mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetAccel(&aa, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-    mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+    mpu.dmpGetEuler(euler, &q);
     
     if (stable) {
       Serial.print("ypr\t");
       Serial.print(millis());
       Serial.print("\t");
-      Serial.print(ypr[0] * 180 / M_PI);
+      Serial.print(euler[0] * 180 / M_PI);
       Serial.print("\t");
-      Serial.print(ypr[1] * 180 / M_PI);
+      Serial.print(euler[1] * 180 / M_PI);
       Serial.print("\t");
-      Serial.println(ypr[2] * 180 / M_PI);
+      Serial.println(euler[2] * 180 / M_PI);
       
 //      Serial.print("\t");
 //      Serial.print(aaWorld.x);
