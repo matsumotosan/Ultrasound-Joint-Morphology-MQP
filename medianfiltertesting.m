@@ -18,48 +18,46 @@ t = pose(2:end,1)/1000;     %extract time data & convert to ms
 %% Calculate displacement (x,y,z)
 postDisp = calcDisp(acc,t); %calculate pose data from calcDisp function
 
-%% Plot original data
-% Plot displacement in x,y,z
-figure; hold on
-subplot(3,1,1)  % acceleration plot
-plot(t, acc(:,1), t, acc(:,2), t, acc(:,3)); grid on
-title('Original Acceleration Plot')
-xlabel('Time (s)')
-ylabel('Acceleration (mm/s^2)');
-legend('a_x','a_y','a_z');
-
-subplot(3,1,2)  % displacement plot
-plot(t, postDisp(1,:)', t, postDisp(2,:)', t, postDisp(3,:)'); grid on
-title('Original Displacement Plot')
-xlabel('Time (s)')
-ylabel('Displacement (mm)');
-legend('d_x','d_y','d_z');
-
-subplot(3,1,3)  % angular displacement plot
-plot(t, ypr(1,:), t, ypr(2,:), t, ypr(3,:)); grid on
-title('Original Angular Displacement Plot')
-xlabel('Time (s)');
-ylabel('Angular Displacement (\circ)');
-legend('Yaw', 'Pitch', 'Roll');
+% %% Plot original data
+% % Plot displacement in x,y,z
+% figure; hold on
+% subplot(3,1,1)  % acceleration plot
+% plot(t, acc(:,1), t, acc(:,2), t, acc(:,3)); grid on
+% title('Original Acceleration Plot')
+% xlabel('Time (s)')
+% ylabel('Acceleration (mm/s^2)');
+% legend('a_x','a_y','a_z');
+% 
+% subplot(3,1,2)  % displacement plot
+% plot(t, postDisp(1,:)', t, postDisp(2,:)', t, postDisp(3,:)'); grid on
+% title('Original Displacement Plot')
+% xlabel('Time (s)')
+% ylabel('Displacement (mm)');
+% legend('d_x','d_y','d_z');
+% 
+% subplot(3,1,3)  % angular displacement plot
+% plot(t, ypr(1,:), t, ypr(2,:), t, ypr(3,:)); grid on
+% title('Original Angular Displacement Plot')
+% xlabel('Time (s)');
+% ylabel('Angular Displacement (\circ)');
+% legend('Yaw', 'Pitch', 'Roll');
 
 %% Calculate Sample Frequency
 fs = 1 / mean(diff(t));             % sampling frequency
 
 %% Median Filter
-% med_fil = medfilt1(acc,5);        % median filt of acc data over 5 sample window
+acc_fil = medfilt1(acc,10);        % median filt of acc data over 5 sample window
 % acc_fil = lowpass(acc,1,fs);      % conventional low pass filter
 % acc_fil = lowpassfilt(acc);       % low pass on median filtered data
 
 %% Butterworth Band-Pass Filtering
 
-%accel_zero = zeros(1,length(acc_fil)); %to compare correct '0' in plot
+order = 2;     %order of the filter
+fcutlow=1;     %low cut frequency in Hz
+fcuthigh=5;   %high cut frequency in Hz
 
-% order = 2;     %order of the filter
-% fcutlow=1;     %low cut frequency in Hz
-% fcuthigh=5;   %high cut frequency in Hz
-% 
-% [b,a]=butter(order,[fcutlow,fcuthigh]/(fs/2),'bandpass');
-% acc_fil = filtfilt(b, a, acc);
+[b,a]=butter(order,[fcutlow,fcuthigh]/(fs/2),'bandpass');
+bp_acc_fil = filtfilt(b, a, acc);
 
 %% Kalman Filter
 
@@ -67,36 +65,46 @@ fs = 1 / mean(diff(t));             % sampling frequency
 % [kest,L,P] = kalman(sys,Qn,Rn,Nn,sensors,known)
 % [kest,L,P,M,Z] = kalman(sys,Qn,Rn,...,type)
 
+%% Create expected plot for do nothing case
+
+a0 = zeros(length(acc_fil),3); %to compare correct '0' in plot
+
+
 %% Plot filtered data
+green = [0 0.5 0];
+
 figure; hold on
-subplot(3,1,1)
-plot(t,acc_fil(:,1),'k',t,acc(:,1));
-title('Filtered Acceleration (x)')
+ax = subplot(3,1,1);
+plot(t,acc(:,1),'c',t,bp_acc_fil(:,1),'b',t,acc_fil(:,1),'r',t,a0(:,1),'k'); grid on;
+title('Acceleration in x');
 xlabel('Time (s)');
-ylabel('Acceleration (mm/s^2)');
-legend('filtered','original');
+ylabel('a_x (mm/s^2)');
+legend('original','bandpass','median','expected');
 
-subplot(3,1,2)
-plot(t,acc_fil(:,2),'k',t,acc(:,2));
-title('Filtered Acceleration (y)')
+ay = subplot(3,1,2);
+plot(t,acc(:,2),'c',t,bp_acc_fil(:,2),'b',t,acc_fil(:,2),'r',t,a0(:,2),'k'); grid on;
+title('Acceleration in y');
 xlabel('Time (s)');
-ylabel('Acceleration (mm/s^2)');
-legend('filtered','original');
+ylabel('a_y (mm/s^2)');
+legend('original','bandpass','median','expected');
 
-subplot(3,1,3)
-plot(t,acc_fil(:,3),'k',t,acc(:,3));
-title('Filtered Acceleration (z)')
+az = subplot(3,1,3);
+plot(t,acc(:,3),'c',t,bp_acc_fil(:,3),'b',t,acc_fil(:,3),'r',t,a0(:,3),'k'); grid on;
+title('Acceleration in z');
 xlabel('Time (s)');
-ylabel('Acceleration (mm/s^2)');
-legend('filtered','original');
+ylabel('a_z (mm/s^2)');
+legend('original','bandpass','median','expected'); 
+
+linkaxes([ax ay az],'xy');
+
 %% Calculate displacement with filtered linear acceleration
 
-disp_fil = calcDisp(acc_fil,t);
+disp_fil = calcDisp(bp_acc_fil,t);
 
 % Plot displacement in x,y,z
 figure; hold on
 subplot(2,1,1)  % acceleration plot
-plot(t, acc_fil(:,1), t, acc_fil(:,2), t, acc_fil(:,3)); grid on
+plot(t, bp_acc_fil(:,1), t, bp_acc_fil(:,2), t, bp_acc_fil(:,3)); grid on
 title('Filtered Acceleration Plot')
 xlabel('Time (s)')
 ylabel('Acceleration (mm/s^2)');
@@ -109,3 +117,8 @@ xlabel('Time (s)')
 ylabel('Displacement (mm)');
 legend('d_x','d_y','d_z');
 
+%% Calc error
+
+avg_disp_error = mean(abs(disp_fil(:,end)));
+
+fprintf('Averaged end displacement error of %.2f mm\n',avg_disp_error);

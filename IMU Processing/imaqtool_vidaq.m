@@ -10,7 +10,7 @@ if exist('vid')
 end
 
 %% Acquire images
-% acquire Device Info for line 17
+% acquire Device Info 1for line 17
 % info = imaqhwinfo('winvideo');
 % ID = info.DeviceInfo(1).DefaultFormat;
 
