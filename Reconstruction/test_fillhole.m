@@ -11,14 +11,14 @@
 clear; close all; clc
 
 %% Test hole-filling algorithm (before and after)
-% Initialize input matrix
+% Initialize input matrixtest
 out = 10;  % dimension of zeros matrix
 in = 4;    % dimension of inner ones matrix
 
 bin = zeros(out,out,out);   % initialize zeros matrix
 idx = (out - in) / 2 + 1:(out + in) / 2;    % ones index vector
 [X,Y,Z] = meshgrid(idx,idx,idx);            % indices of ones
-% bin(X,Y,Z) = 3 * rand(length(idx) ^ 3 * ones(1,3)); % create inner ones matrix
+bin(X,Y,Z) = 3 * rand(length(idx) ^ 3 * ones(1,3)); % create inner ones matrix
 bin(X,Y,Z) = 100 * ones(length(X)^3,length(X)^3,length(X)^3); % create inner ones matrix
 
 % Hole fill
@@ -37,7 +37,7 @@ view(3);
 % Plot after hole-filling
 filled_lidx = find(bin_holefill);
 [A,B,C] = ind2sub(size(bin_holefill),filled_lidx);
-% scatter3(A,B,C,40,bin_holefill(filled_lidx),'filled');
+scatter3(A,B,C,40,bin_holefill(filled_lidx),'filled');
 
 
 title('Hole-filling Demonstration')

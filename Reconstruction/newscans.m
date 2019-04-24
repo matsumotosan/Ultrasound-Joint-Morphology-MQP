@@ -1,7 +1,10 @@
 function [scans,shapebin] = newscans(frame_size,angles,r,shape,shape_size)
-%NEWSCANS Create simulated US data
+%NEWSCANS Create simulated US B-scan data of simple shapes imaged in yaw
 %
-% NEWSCANS(FRAME_SIZE,ANGLES,RADIUS,SHAPE_SIZE,) - 
+%   NEWSCANS(FRAME_SIZE,ANGLES,RADIUS,SHAPE_SIZE) - Create simulated SCANS
+%   of SHAPE of size SHAPE_SIZE using a window size of FRAME_SIZE. Imaged
+%   from a radius R at ANGLES. Also returns a complete view of the
+%   simulated geometry in SHAPEBIN.
 
 %%
 % Frame dimensions

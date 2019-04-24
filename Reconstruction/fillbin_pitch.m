@@ -6,10 +6,6 @@ function bin = fillbin_pitch(frame,pose,r,pad)
 %   OPT specifies the orientation the frame is rotated. PAd can be specified 
 %   to add thickness to each of the frames to fill more of BIN.    
 %
-%   BIN = FILLBIN(FRAME,POSE,R,T)
-%
-%   BIN = FILLBIN(___,METHOD)
-%
 
 if mod(size(frame{1},2),2) == 0
     for i = 1:length(frame)

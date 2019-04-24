@@ -1,5 +1,5 @@
 function bin = fillbin_yaw(frame,angle,r,mm_per_pixel,method)
-%FILLBIN_YAW - Distribute pixels to representative voxels
+%FILLBIN_YAW - Reconstruction in yaw distribution step
 %
 %   FILLBIN_YAW(FRAME,ANGLE,R,MM_PER_PIXEL,METHOD) - performs distribution 
 %   step of reconstruction for probe in yaw motion. Each FRAME is inserted 

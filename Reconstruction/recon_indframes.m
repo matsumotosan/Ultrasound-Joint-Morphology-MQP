@@ -1,5 +1,14 @@
 clear; clc; close all
 
+%% Reconstruction (in yaw) of individual frames
+% Reconstruct B-scans collected in yaw by tagging individual frames with
+% their corresponding angular measurements obtained with IMU. Can vary
+% imaging radius, pixel interpolation method, US depth setting, etc. Can
+% use imdistline tool (needs MATLAB Image Processing Toolbox) to measure
+% pixel distance between two points in reconstructed image. Multiply
+% distance by the 'mm_per_pixel' variable to obtain measurement in mm.
+
+
 %% Read files and create video
 % folder = '/Users/Shion/Dropbox/MQP-US Media/4_2_final_test/with_bag/trial_2';
 % folder = '/Users/Shion/Dropbox/MQP-US Media/4_6_phantom_test2/trial3/angles_fixed';

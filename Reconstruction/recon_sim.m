@@ -1,46 +1,18 @@
 clear; clc; close all
 
 %% Reconstruction with simulated B-scans
+% This file contains scripts to demonstrate reconstruction in pitch and
+% yaw. Reconstruction in pitch has not been tested, but reconstruction in
+% yaw has been tested with some simple geometries. Run each section
+% individually.
+
+%% RECONSTRUCTION IN PITCH - DEMO
 % This script creates a set of binary images to simulate B-scans obtained
 % using the design rail system. The images are accompanied with
 % corresponding pose information. The reconstruction algorithm is used to
 % reconstruct the frames into a volume and is compared to a ground truth
 % volume.
 
-%% Cropping window for depth setting
-% depth = (1:16) * 10; % depth (mm)
-% 
-% % Cropping window
-% win = {[60 553 60 189];
-%        [60 553 60 320];
-%        [81 532 60 418];
-%        [138 477 60 418];
-%        [173 443 60 418];
-%        [195 420 60 418];
-%        [210 403 60 418];
-%        [222 391 60 418];
-%        [232 381 60 418];
-%        [237 374 60 418];
-%        [245 367 60 418];
-%        [252 364 60 418];
-%        [255 358 60 418];
-%        [261 355 60 418];
-%        [262 351 60 418];
-%        [265 348 60 418]};   
-% 
-% % cm/pixel
-% for i = 1:length(win)
-%     win{i}(5) = depth(i) / (win{i}(4) - win{i}(3));   
-% end
-% 
-% M = containers.Map(depth,win);
-
-
-%% PART 1: RECONSTRUCTION IN PITCH - BIN FILL DEMO
-
-
-
-%% PART 2: RECONSTRUCTION IN PITCH - VERIFICATION
 % Create shape
 shape = {'cube','sphere','cuboid'};
 shapenum = 1;
@@ -127,7 +99,7 @@ grid on
 view(3)
 
 % Plot reconstructed volume
-bin = fillbin_thick(frame,angles,r,0);
+bin = fillbin_pitch(frame,angles,r,0);
 
 figure; hold on
 [x,y,z] = ind2sub(size(bin),find(bin));
@@ -140,32 +112,32 @@ zlabel('Z')
 grid on
 view(3)
 
-%% PART 3: RECONSTRUCTION IN YAW - BIN FILL DEMO
-clear; clc; close all
-
-% Rail and frame data
-setting = load('us_setting_map.mat');
-depth = 70;                             % US setting (mm)
-win_data = setting.M(depth);            % load setting
-mm_per_pixel = win_data(5);             % frame mm/pixel resolution
-r = 70;                                 % rail radius (mm)
-
-% Define slices
-noSlices = 3;
-angles = linspace(-45, 45, noSlices);
-method = {'nearest','bilinear','bicubic'};
-
-% Create fake frames
-frames = {};
-nrows = win_data(4) - win_data(3);
-ncols = win_data(2) - win_data(1);
-for i = 1:noSlices
-    frames{i} = 100 * ones(nrows,ncols);
-end
-
-% Reconstruction in yaw
-bin_thin = fillbin_yaw(frames,angles,r,mm_per_pixel,method{3});
-
+%% RECONSTRUCTION IN YAW - BIN FILL DEMO
+% % clear; clc; close all
+% % 
+% % % Rail and frame data
+% % setting = load('us_setting_map.mat');
+% % depth = 70;                             % US setting (mm)
+% % win_data = setting.M(depth);            % load setting
+% % mm_per_pixel = win_data(5);             % frame mm/pixel resolution
+% % r = 70;                                 % rail radius (mm)
+% % 
+% % % Define slices
+% % noSlices = 3;
+% % angles = linspace(-45, 45, noSlices);
+% % method = {'nearest','bilinear','bicubic'};
+% % 
+% % % Create fake frames
+% % frames = {};
+% % nrows = win_data(4) - win_data(3);
+% % ncols = win_data(2) - win_data(1);
+% % for i = 1:noSlices
+% %     frames{i} = 100 * ones(nrows,ncols);
+% % end
+% % 
+% % % Reconstruction in yaw
+% % bin_thin = fillbin_yaw(frames,angles,r,mm_per_pixel,method{3});
+%
 % Compare interpolation methods
 % for i = 1:length(method)
 %     bin_thin = fillbin_thin(frames,angles,50,method{i});
@@ -179,7 +151,18 @@ bin_thin = fillbin_yaw(frames,angles,r,mm_per_pixel,method{3});
 %     ylabel('Depth')
 % end
 
-%% PART 4: RECONSTRUCTION IN YAW - SIMULATED B-SCAN
+%% RECONSTRUCTION IN YAW - SIMULATED B-SCAN
+% Simulated B-scan reconstruction testing script. B-scans of simple
+% geometries (square, circle, or a composite of the two) can be created and
+% used for reconstruction in yaw. The expected image and reconstructed
+% image are compared using two metrics: 2D cross correlation (normxcorr2)
+% and the Structural Similarity Index (SSIM). The reconstruction algorithm
+% (fillbin_yaw) requires the B-scans and their corresponding angles (among
+% other arguments). Testing can be performed with ideal data. Random noise
+% can be added artificially to the 'angles' input for the algorithm to
+% simulate reconstruction with random errors that the IMU may experience
+% during data acquisition.
+
 clear; clc; close all
 
 % Simulated B-scan parameters
