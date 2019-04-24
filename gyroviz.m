@@ -1,9 +1,10 @@
-%% Source
+% This script can be run to collect IMU readings through MATLAB. The
+% corresponding Arduino sketch must be uploaded and running prior to
+% running this script. Correct COM port must be chosen for user's system.
+% This script is a modified version of code obtained from link below:
+%
 % https://github.com/SayanSeth/MPU-6050-MATLAB-Toolbox/blob/master/Gyroscope_Visualization.m
-% SAYAN SETH
-%
-% USE THIS ONE
-%
+
 clear; clc; close all
 
 %% Create serial object for Arduino
