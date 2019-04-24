@@ -7,7 +7,6 @@ function [intr,nonint] = findintersect(shape,volume,surface)
 %   passed in as an n-by-3 matrix (dimensions with respect to each other
 %   can differ).
 %
-%
 %%
 if size(volume,2) ~= 3
     error('VOLUME must be an n-by-3 matrix')

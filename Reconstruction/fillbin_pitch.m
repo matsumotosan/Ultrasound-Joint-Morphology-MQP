@@ -1,7 +1,7 @@
 function bin = fillbin_pitch(frame,pose,r,pad)
 %FILLBIN_THICK - Distribute pixels to representative voxels
 %
-%   BIN = FILLBIN(FRAME,POSE,R,PAD) rotates and translates every from
+%   BIN = FILLBIN(FRAME,POSE,R,PAD) rotates and translates every frame
 %   from FRAME according to the corresponding POSE and R and fills BIN. The
 %   OPT specifies the orientation the frame is rotated. PAd can be specified 
 %   to add thickness to each of the frames to fill more of BIN.    

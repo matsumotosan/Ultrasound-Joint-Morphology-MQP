@@ -1,6 +1,7 @@
-% %% Acquire IMU data and US images simultaneously
+%% Acquire IMU data and US images simultaneously
 % Requires Parallel Processing Toolbox
-% This script contains program to collect US images
+% This script is intended to collect US scans and IMU data simultaneously
+% to align US scans and IMU data temporally.
 
 clear; close all; clc
 
