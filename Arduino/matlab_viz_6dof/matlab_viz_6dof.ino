@@ -115,16 +115,14 @@ void setup()
   // load and configure the DMP
   Serial.println(F("Initializing DMP..."));
   devStatus = mpu.dmpInitialize();
-
-
   
 // ================================================================
 // ===                      OFFSETS HERE                        ===
 // ================================================================
-    mpu.setXAccelOffset(-1974);
+    mpu.setXAccelOffset(-1978);
     mpu.setYAccelOffset(-5424);
-    mpu.setZAccelOffset(2992);
-    mpu.setXGyroOffset(112);
+    mpu.setZAccelOffset(2985);
+    mpu.setXGyroOffset(109);
     mpu.setYGyroOffset(37);
     mpu.setZGyroOffset(-14);
 

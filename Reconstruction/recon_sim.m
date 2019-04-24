@@ -182,37 +182,65 @@ bin_thin = fillbin_yaw(frames,angles,r,mm_per_pixel,method{3});
 %% PART 4: RECONSTRUCTION IN YAW - SIMULATED B-SCAN
 clear; clc; close all
 
-% Create simulated scans
+% Simulated B-scan parameters
 frameSz = [60,20];
-angles = linspace(-90,90,5);
-radius = [30];
+N = 20;
+angles = linspace(-90,90,N);
+radius = 30;
 shape = {'square','circle','composite'};
 shapeSz = 20;
 
+% Introduce errors to angle
+max_off = 0.96;
+angles_err = angles + (-max_off + 2 * max_off * rand(1,N));
+
 % Reconstruct
 mm_per_pixel = 1;
-method = {'nearest','bilinear','bicubic'};
-for i = 1:length(radius)
-    [scans,shapebin] = newscans(frameSz,angles,radius(i),shape{2},shapeSz);
-    bin_yaw = fillbin_yaw(scans,angles,radius(i),mm_per_pixel,method{2});
-%     subplot(1,length(radius),i)
-%     imagesc(bin_yaw)
-%     title(['r=' num2str(radius(i))])
+method = {'Nearest','Bilinear','Bicubic'};
+
+figure; hold on
+for i = 1:length(method)
+    % Simulated B-scans of shape
+    [scans,shapebin] = newscans(frameSz,angles,radius,shape{2},shapeSz);
+    
+    % Reconstruct shape from simulated B-scans
+    bin_yaw = fillbin_yaw(scans,angles,radius,mm_per_pixel,method{i});
+    
+    % Reconstruct shape from simulated B-scans (errors in angles)    
+    bin_yaw_err = fillbin_yaw(scans,angles_err,radius,mm_per_pixel,method{i});
+    
+%     % Plot reconstructed shape and list SSIM and normxcorr2
+%     ssimval = ssim(shapebin,bin_yaw);
+%     xcorr_2d = max(max(normxcorr2(shapebin,bin_yaw)));
+%
+%     subplot(2,2,i+1); hold on
+%     imagesc(bin_yaw_err)
+%     title({[method{i}]; [' (SSIM:' num2str(round(ssimval,3)), ')']; ...
+%           ['(normxcorr2:' ...
+%           num2str(round(xcorr_2d,3)) ')']})
+%     colorbar
+%     axis equal tight
+    
+    % Compare reconstruction with random errors introduced
+    [rows, cols] = size(shapebin);
+    ssimval_err = ssim(shapebin,imresize(bin_yaw_err, [rows cols]));
+    xcorr_2d_err = max(max(normxcorr2(shapebin,bin_yaw_err)));
+    
+    subplot(2,2,i+1)
+    imagesc(bin_yaw_err)
+    title({[method{i}]; [' (SSIM:' num2str(round(ssimval_err,3)), ')']; ...
+          ['(normxcorr2:' ...
+          num2str(round(xcorr_2d_err,3)) ')']})
+    colorbar
+    axis equal tight
 end
 
-% Compare original and reconstructed
-figure;
-subplot(1,2,1)
+% Plot original shape
+subplot(2,2,1)
 imagesc(shapebin)
 title('Original')
 colorbar
-
-ssimval = ssim(shapebin,bin_yaw);   % structural similarity index
-
-subplot(1,2,2)
-imagesc(bin_yaw)
-title(['Reconstructed ' '(SSIM:' num2str(ssimval), ')'])
-colorbar
+axis equal tight
 
 % subplot(1,3,3)
 % fz = imfuse(shapebin,bin_yaw,'falsecolor','Scaling','joint','ColorChannels',[1 2 0]);
@@ -220,13 +248,14 @@ colorbar
 % title('Fused')
 % 
 % % Image similarity
-figure
-C = xcorr2(shapebin,bin_yaw);
-surf(C); shading flat
-title('Normalized Cross Correlation Coefficient')
+% figure
+% C = normxcorr2(shapebin,bin_yaw);
+% surf(C); shading flat
+% title('Normalized Cross Correlation Coefficient')
+% 
+% err = immse(shapebin,bin_yaw);      % mean-squared error
+% [peaksnr, snr] = psnr(shapebin, bin_yaw);  % peak signal-to-noise ratio
 
-err = immse(shapebin,bin_yaw);      % mean-squared error
-[peaksnr, snr] = psnr(shapebin, bin_yaw);  % peak signal-to-noise ratio
 
 %% Sutherland-Hodgman Algorithm
 % define the 6 planes of a box

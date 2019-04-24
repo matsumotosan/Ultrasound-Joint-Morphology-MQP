@@ -51,7 +51,7 @@ end
 
 % Fill bin, rotate frame, overlap, rotate back, extract frame
 scans = {};
-figure; hold on
+% figure; hold on
 for i = 1:length(angles)
     % Find intersection between framebin and shapebin
     framebin = bin;
@@ -59,9 +59,9 @@ for i = 1:length(angles)
     framebin = rotateAround(framebin, p(1), p(2), angles(i));
     totalbin = framebin + shapebin;
 
-    subplot(1,length(angles),i);
-    imagesc(totalbin); hold on
-    plot(p(2),p(1),'r+')
+%     subplot(1,length(angles),i);
+%     imagesc(totalbin); hold on
+%     plot(p(2),p(1),'r+')
     totalbin = rotateAround(totalbin, p(1), p(2), -angles(i));
     
     % Extract scan from totalbin
