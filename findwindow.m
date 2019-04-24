@@ -1,4 +1,9 @@
 %% Find cropping window to remove non-image related pixels from scans
+% Find coordinates of cropping window to separate US B-scan from rest of
+% screen (menu, etc.)
+
+clear; clc; close all;
+
 % Load frames
 addpath(genpath('/Users/Shion/Dropbox/MQP-US Media'))
 file = '5_cm.mat';    % Shion
