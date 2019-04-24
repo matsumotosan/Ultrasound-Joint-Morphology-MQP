@@ -2,7 +2,7 @@
 
 %load in the pose data and analyze it for accuracy
 
-%close all; clc
+close all; clear all; clc
 
 %% Extract data of interest
 
@@ -129,8 +129,17 @@ ylabel('angle (degrees)');
 title('low angle data');
 legend('experimental','theoretical');
 
-avg_higherror = mean(abs(high_theoretical-high_yaw)); %percent diff
-avg_lowerror = mean(abs(low_theoretical-low_yaw)); %percent diff
+higherror = abs(high_theoretical-high_yaw);
+lowerror = abs(low_theoretical-low_yaw);
 
-fprintf('High angle error was: %.3f degrees \r\n', avg_higherror);
-fprintf('Low angle error was: %.3f degrees \r\n', avg_lowerror);
+avg_higherror = mean(higherror); %percent diff
+avg_lowerror = mean(lowerror); %percent diff
+
+fprintf('High angle error was: %.3f \n', avg_higherror);
+fprintf('Low angle error was: %.3f \n', avg_lowerror);
+% disp(['Min high error: ' num2str(min(higherror))]);
+% disp(['Min low error: ' num2str(min(lowerror))]);
+% disp(['Max high error: ' num2str(max(higherror))]);
+% disp(['Max low error: ' num2str(max(lowerror))]);
+disp(['SD high error: ' num2str(std(higherror))]);
+disp(['SD low error: ' num2str(std(lowerror))]);
