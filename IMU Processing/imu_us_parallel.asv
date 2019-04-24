@@ -34,10 +34,7 @@ n = 1000;        % number of IMU measurements
 % US info
 noframes = 100;
 
-%if pre-existing parpool, delete this instance
 delete(gcp('nocreate'))
-
-%create two parallel instances
 parpool(2)
 
 %frame name
