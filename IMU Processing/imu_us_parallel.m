@@ -3,10 +3,6 @@
 % acquire ultrasound images and IMU positioning data in parallel. These
 % functions are called collect_imu and collect_us, respectively.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Requires Parallel Processing Toolbox
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 clear; close all; clc
 
 %% Idea 1: Open another MATLAB instance
