@@ -1,4 +1,11 @@
 function imu_data = collect_imu(baudrate,port,n)
+% COLLECT_IMU - acquire IMU data 
+%
+%   COLLECT_IMU(BAUDRATE,PORT,N) - to be run using imu_us_parallel.m script
+%   to acquire IMU data in parallel with US scan acquisition. Read IMU at
+%   PORT at BAUDRATE while time less than N
+
+%%
 %baudrate = 115200;%9600;%115200;
 
 %port = '/dev/tty.usbmodem14101'; %for Shion
