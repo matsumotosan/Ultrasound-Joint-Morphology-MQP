@@ -1,5 +1,8 @@
 % This script is meant to test the accuracy of the double integration
-% scheme using cumtrapz. 
+% scheme using cumtrapz for calculating displacement from acceleration. The
+% acceleration is modeled as different sinusoidal functions for which
+% displacements can be calculated analytically.
+
 clear; close all; clc;
 
 %% Trial dataset
