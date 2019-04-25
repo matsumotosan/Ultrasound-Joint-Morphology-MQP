@@ -7,4 +7,4 @@ MATLAB Image Acquisition Toolbox used to acquire individual frames from ultrasou
 Measurements for linear acceleration and rotational displacement acquired through MPU 6050 inertial measurement unit (IMU).
 
 ## 3D Reconstruction
-Pixeal nearest neighbor (PNN) algorithm used to reconstruct a 3D image based on multiple 2D US scans and probe pose data from IMU. 
+Pixel nearest neighbor (PNN) algorithm used to reconstruct a 3D image based on multiple 2D US scans and probe pose data from IMU. 
